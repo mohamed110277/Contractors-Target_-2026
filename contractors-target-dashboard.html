@@ -1,0 +1,1590 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Contractors Target - Sep 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+  :root{
+    --bg:#F3F4F7; --card:#FFFFFF; --border:#E4E6EC;
+    --ink:#14181F; --ink-soft:#6B7280; --ink-faint:#9CA3AF;
+    --badge:#14181F;
+    --c1:#2563EB; --c1-bg:#EFF4FE;
+    --c2:#059669; --c2-bg:#EAF7F1;
+    --info-bg:#EFF6FF; --info-border:#BFDBFE; --info:#1D4ED8;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  /* Theme intentionally locked to the light palette above — do not
+     switch colors based on the viewer's device dark-mode setting. */
+  html{ scroll-padding-top: env(safe-area-inset-top, 0px); }
+  *{box-sizing:border-box;}
+  body{ margin:0; background:var(--bg); font-family:'Inter',sans-serif; color:var(--ink); min-height:100vh; }
+  .num{ font-variant-numeric: tabular-nums; }
+
+  header{
+    padding:24px 32px 16px; display:flex; align-items:flex-end; justify-content:space-between;
+    flex-wrap:wrap; gap:14px; border-bottom:1px solid var(--border); background:var(--card);
+  }
+  .title-block h1{ margin:0 0 4px; font-size:21px; font-weight:900; }
+  .title-block p{ margin:0; color:var(--ink-soft); font-size:13px; }
+  .controls{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  .controls input, .controls select, .controls button{
+    font-family:'Inter',sans-serif; border:1px solid var(--border); background:var(--bg);
+    border-radius:8px; padding:9px 12px; font-size:13px; color:var(--ink); outline:none; cursor:pointer;
+  }
+  .controls input{ width:190px; cursor:text; }
+  .controls input:focus, .controls select:focus{ border-color:var(--c1); }
+  .controls button{ background:var(--ink); color:var(--card); border-color:var(--ink); font-weight:700; }
+
+  .banner{
+    margin:16px 32px 0; padding:12px 16px; border-radius:10px;
+    background:var(--info-bg); border:1px solid var(--info-border); color:var(--info);
+    font-size:13px; line-height:1.8;
+  }
+
+  .kpis{ display:grid; grid-template-columns:repeat(7,1fr); gap:14px; padding:20px 32px 4px; }
+  .kpi{ background:var(--card); border:1px solid var(--border); border-radius:10px; padding:14px 16px; border-inline-start:4px solid var(--kpi-color, var(--ink)); }
+  .kpi .kpi-label{ font-size:12px; color:var(--ink-soft); margin-bottom:6px; }
+  .kpi .kpi-value{ font-size:22px; font-weight:900; }
+
+  main{ padding:20px 32px 48px; }
+  .grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:16px; }
+  .card{ background:var(--card); border:1px solid var(--border); border-radius:12px; padding:18px 18px 16px; transition:box-shadow .15s ease, transform .15s ease; }
+  .card:hover{ box-shadow:0 4px 16px rgba(20,24,31,0.06); transform:translateY(-1px); }
+  .card-head{ display:flex; align-items:center; gap:8px; color:var(--ink-soft); font-size:13px; margin-bottom:14px; }
+  .pin{ width:16px; height:16px; flex:none; color:var(--ink-faint); }
+  .hub-name{ color:var(--ink); font-weight:700; font-size:14px; }
+  .headline{ margin-bottom:14px; }
+  .headline .value{ font-size:30px; font-weight:900; line-height:1.1; }
+  .headline .label{ font-size:12px; color:var(--ink-soft); margin-top:2px; }
+  .stats{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:16px; }
+  .stat{ border-radius:8px; padding:8px 10px; background:var(--stat-bg); }
+  .stat .stat-value{ font-weight:700; font-size:15px; color:var(--stat-color); }
+  .stat .stat-label{ font-size:11px; color:var(--ink-soft); margin-top:1px; }
+
+  .branch-title{ font-size:12px; color:var(--ink-soft); margin-bottom:8px; border-top:1px solid var(--border); padding-top:14px; }
+  .pie-wrap{ display:flex; align-items:center; gap:14px; }
+  .pie-wrap canvas{ width:170px !important; height:170px !important; flex:none; }
+  .legend{ flex:1; display:flex; flex-direction:column; gap:5px; min-width:0; max-height:170px; overflow-y:auto; }
+  .legend-row{ display:flex; align-items:center; gap:6px; font-size:11.5px; }
+  .legend-dot{ width:9px; height:9px; border-radius:50%; flex:none; }
+  .legend-name{ color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1; }
+  .legend-val{ color:var(--ink-soft); flex:none; font-weight:700; }
+
+  .empty-state{ text-align:center; color:var(--ink-soft); padding:60px 0; font-size:14px; }
+
+  .expand-btn{
+    margin-inline-start:auto; flex:none; width:26px; height:26px; border-radius:7px;
+    display:flex; align-items:center; justify-content:center; background:var(--bg);
+    border:1px solid var(--border); color:var(--ink-soft); cursor:pointer;
+  }
+  .expand-btn:hover{ border-color:var(--c1); color:var(--c1); }
+  .expand-btn svg{ width:14px; height:14px; }
+
+  .fc-wrap{ padding:20px 32px 48px; }
+  .fc-chart-card{ background:var(--card); border:1px solid var(--border); border-radius:14px; padding:18px; margin-bottom:16px; }
+  .hub-daily-legend{ display:flex; gap:16px; margin-bottom:12px; }
+  .hub-daily-legend .legend-chip{ display:flex; align-items:center; gap:6px; font-size:13px; font-weight:600; color:var(--ink); }
+  .hub-daily-legend .legend-chip .dot{ width:10px; height:10px; border-radius:50%; flex:none; }
+  .fc-chart-box{ position:relative; height:320px; width:100%; }
+  .fc-chart-box canvas{ max-width:100%; }
+  .fc-stats{ display:grid; grid-template-columns:repeat(5,1fr); gap:12px; }
+  .fc-stat{ background:var(--card); border:1px solid var(--border); border-radius:12px; padding:14px; text-align:center; }
+  .fc-stat .fc-val{ font-weight:900; font-size:20px; color:var(--ink); }
+  .fc-stat .fc-val.pos{ color:#16A34A; }
+  .fc-stat .fc-val.neg{ color:#DC2626; }
+  .fc-stat .fc-lbl{ font-size:11.5px; color:var(--ink-soft); margin-top:4px; }
+  .fc-contractor-body{ display:flex; gap:16px; align-items:flex-start; }
+  .fc-contractor-list-wrap{ width:260px; flex:none; }
+  .fc-contractor-list-wrap input{
+    width:100%; box-sizing:border-box; padding:9px 12px; border-radius:8px; border:1px solid var(--border);
+    font-family:'Inter',sans-serif; font-size:13px; margin-bottom:10px; background:var(--card); color:var(--ink);
+  }
+  .fc-contractor-list{ max-height:520px; overflow-y:auto; background:var(--card); border:1px solid var(--border); border-radius:12px; }
+  .fc-contractor-row{
+    padding:10px 12px; font-size:13.5px; cursor:pointer; border-bottom:1px solid var(--border);
+    display:flex; justify-content:space-between; align-items:center; gap:6px;
+  }
+  .fc-contractor-row:last-child{ border-bottom:none; }
+  .fc-contractor-row:hover{ background:var(--bg); }
+  .fc-contractor-row.active{ background:var(--ink); color:var(--card); }
+  .fc-contractor-row .fc-trend{ font-weight:800; font-size:12px; }
+  .fc-contractor-row .fc-trend.pos{ color:#22C55E; }
+  .fc-contractor-row .fc-trend.neg{ color:#F87171; }
+  .fc-contractor-row.active .fc-trend.pos{ color:#4ADE80; }
+  .fc-contractor-row.active .fc-trend.neg{ color:#FCA5A5; }
+  .fc-contractor-detail{ flex:1; min-width:0; }
+
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(20,24,31,0.6); z-index:1000;
+    display:flex; align-items:center; justify-content:center; padding:24px;
+  }
+  .modal-box{
+    background:var(--card); border-radius:16px; width:96vw; max-width:1500px;
+    height:92vh; max-height:92vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.3);
+  }
+  .modal-toolbar{
+    display:flex; justify-content:flex-end; gap:8px; padding:14px 20px 0;
+  }
+  .modal-toolbar button{
+    font-family:'Inter',sans-serif; font-size:13px; font-weight:700; cursor:pointer;
+    border-radius:8px; padding:8px 14px; border:1px solid var(--border);
+    background:var(--bg); color:var(--ink); display:flex; align-items:center; gap:6px;
+  }
+  .modal-toolbar .downloadBtn{ background:var(--ink); color:var(--card); border-color:var(--ink); }
+  .modal-toolbar .downloadBtn.copied{ background:var(--c2); border-color:var(--c2); }
+  .modal-toolbar .closeBtn:hover{ border-color:var(--c1); color:var(--c1); }
+  .modal-capture{ padding:24px 32px 32px; background:#fff; }
+  .modal-head{ display:flex; align-items:center; gap:10px; margin-bottom:20px; }
+  .modal-head .pin{ width:22px; height:22px; color:var(--ink-faint); flex:none; }
+  .modal-head .name{ font-size:24px; font-weight:900; color:var(--ink); }
+  .modal-body{ display:flex; gap:32px; align-items:stretch; min-height:100%; }
+  .modal-left{ flex:1; min-width:0; }
+  .modal-right{ flex:1.2; min-width:0; display:flex; flex-direction:column; }
+  .modal-headline{ text-align:center; margin-bottom:16px; padding:28px; background:var(--bg); border-radius:14px; }
+  .modal-headline .value{ font-size:64px; font-weight:900; line-height:1; color:var(--ink); }
+  .modal-headline .label{ font-size:15px; color:var(--ink-soft); margin-top:8px; }
+  .modal-stats{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .modal-stats .mstat{ border-radius:12px; padding:20px; text-align:center; background:var(--stat-bg); }
+  .modal-stats .mstat .mval{ font-weight:900; font-size:32px; color:var(--stat-color); }
+  .modal-stats .mstat .mlabel{ font-size:13px; color:var(--ink-soft); margin-top:6px; }
+  .modal-hubs-title{ font-size:14px; font-weight:700; color:var(--ink-soft); margin-bottom:12px; }
+  .modal-chart-wrap{ display:flex; align-items:flex-start; gap:22px; background:var(--bg); border-radius:14px; padding:20px; flex:1; }
+  .modal-chart-wrap canvas{ max-width:260px; max-height:260px; flex:none; }
+  .modal-legend{ flex:1; min-width:0; display:grid; grid-template-columns:1fr 1fr; gap:0 20px; align-content:start; }
+  .modal-legend .legend-row{ display:flex; align-items:center; gap:8px; padding:6px 0; font-size:13.5px; border-bottom:1px solid var(--border); min-width:0; }
+  .modal-legend .legend-dot{ width:9px; height:9px; border-radius:50%; flex:none; }
+  .modal-legend .legend-name{ flex:1; min-width:0; color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .modal-legend .legend-val{ font-weight:800; color:var(--ink); flex:none; }
+
+  @media (max-width:800px){
+    .modal-body{ flex-direction:column; }
+    .modal-box{ max-width:96vw; }
+  }
+
+  @media (max-width:800px){
+    .kpis{ grid-template-columns:repeat(3,1fr); }
+    header{ padding:20px; } main{ padding:16px; }
+  }
+@media print{.controls,.banner{display:none!important} body{background:#fff}.card{break-inside:avoid;box-shadow:none!important}.kpis{padding-top:10px}}
+
+  html, body{ height:100%; }
+  .app-shell{ display:flex; min-height:100vh; }
+  .sidebar{
+    width:140px; flex:none; height:100vh; position:sticky; top:0;
+    overflow-y:auto; align-self:flex-start;
+    background:linear-gradient(180deg,#3F4650,#2B3038);
+    color:#fff; padding:16px 0;
+    padding-top:calc(16px + env(safe-area-inset-top, 0px));
+  }
+  .sidebar .home-title{
+    font-size:11px; font-weight:700; letter-spacing:.5px;
+    padding:0 14px 12px; margin-bottom:4px; border-bottom:1px solid rgba(255,255,255,0.14);
+  }
+  .sidebar nav{ display:flex; flex-direction:column; }
+  .sidebar .nav-item{
+    display:flex; align-items:center; gap:8px;
+    padding:9px 14px; color:rgba(255,255,255,0.8);
+    font-size:12px; cursor:pointer; background:none; border:none;
+    text-align:left; width:100%; font-family:'Inter',sans-serif;
+  }
+  .sidebar .nav-item .dot{
+    width:7px; height:7px; border-radius:50%; background:#fff; flex:none;
+  }
+  .sidebar .nav-item.active{ color:#FDBA74; font-weight:700; }
+  .sidebar .nav-item.nav-sub{ padding-left:30px; font-size:11.5px; }
+  .sidebar .nav-item.nav-sub .dot{ width:5px; height:5px; }
+  .sidebar .nav-item .nav-arrow{
+    margin-inline-start:auto; font-size:9px; transition:transform .15s ease; display:inline-block;
+  }
+  .sidebar .nav-item .nav-arrow.open{ transform:rotate(90deg); }
+  .sidebar .nav-item.active .dot{ background:#FDBA74; }
+  .sidebar .nav-item:hover{ color:#fff; }
+  .app-content{ flex:1; min-width:0; }
+
+  .map-wrap{ padding:20px 32px 48px; }
+  .map-list{ display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:10px; }
+  .map-item{
+    background:var(--card); border:1px solid var(--border); border-radius:10px;
+    padding:12px 14px; font-size:14px; font-weight:600; color:var(--ink);
+    display:flex; align-items:center; gap:8px;
+  }
+  .map-item .pin2{ width:14px; height:14px; color:var(--ink-faint); flex:none; }
+
+  .map-wrap{ padding:20px 32px 48px; }
+  .map-list{ display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:10px; }
+  .map-item{
+    background:var(--card); border:1px solid var(--border); border-radius:10px;
+    padding:12px 14px; font-size:14px; font-weight:600; color:var(--ink);
+    display:flex; align-items:center; gap:8px; cursor:pointer;
+    transition:box-shadow .15s ease, transform .15s ease;
+  }
+  .map-item:hover{ box-shadow:0 4px 14px rgba(20,24,31,0.08); transform:translateY(-1px); border-color:var(--c1); }
+  .map-item .pin2{ width:14px; height:14px; color:var(--ink-faint); flex:none; }
+
+  .acq-wrap{ padding:20px 32px 48px; }
+  .acq-controls{ display:flex; justify-content:flex-end; margin-bottom:14px; }
+  .acq-sort-btn{
+    display:inline-flex; align-items:center; gap:6px; background:var(--card);
+    border:1px solid var(--border); border-radius:8px; padding:9px 14px;
+    font-family:'Inter',sans-serif; font-size:13px; color:var(--ink); cursor:pointer; font-weight:600;
+  }
+  .acq-sort-btn:hover{ border-color:var(--c1); }
+  .acq-sort-btn .arrow{ transition: transform .15s ease; }
+  .acq-sort-btn.asc .arrow{ transform: rotate(180deg); }
+  .acq-list{ display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:10px; }
+  .acq-row{
+    position:relative;
+    background:var(--card); border:1px solid var(--border); border-radius:10px;
+    padding:12px 14px; transition:box-shadow .15s ease, transform .15s ease;
+  }
+  .acq-row:hover{ box-shadow:0 4px 14px rgba(20,24,31,0.08); transform:translateY(-1px); border-color:var(--c1); }
+  .acq-expand-btn{
+    position:absolute; top:10px; right:10px; width:24px; height:24px; border-radius:7px;
+    display:flex; align-items:center; justify-content:center; background:var(--bg);
+    border:1px solid var(--border); color:var(--ink-soft); cursor:pointer; z-index:1;
+  }
+  .acq-expand-btn:hover{ border-color:var(--c1); color:var(--c1); }
+  .acq-expand-btn svg{ width:13px; height:13px; }
+  .acq-branch{ display:flex; align-items:center; gap:8px; font-size:14px; font-weight:600; color:var(--ink); min-width:0; margin-bottom:10px; }
+  .acq-branch .pin2{ width:14px; height:14px; color:var(--ink-faint); flex:none; }
+  .acq-branch .name{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .acq-count{ display:flex; flex-direction:column; gap:6px; }
+  .acq-count .val{ font-weight:900; font-size:20px; color:var(--ink); line-height:1; }
+  .acq-count .bar-track{ width:100%; height:6px; border-radius:3px; background:var(--border); overflow:hidden; }
+  .acq-count .bar-fill{ height:100%; background:var(--c1); border-radius:3px; }
+  .acq-split{ display:flex; flex-direction:column; gap:2px; margin-top:6px; }
+  .acq-split-item{ font-size:11px; color:var(--ink-soft); display:flex; align-items:center; gap:5px; }
+  .acq-split-item .dot{ width:7px; height:7px; border-radius:50%; flex:none; }
+  .acq-split-item .dot.regular{ background:var(--c1); }
+  .acq-split-item .dot.owned{ background:#D97706; }
+
+  .backBtn{
+    display:inline-flex; align-items:center; gap:6px; background:var(--card);
+    border:1px solid var(--border); border-radius:8px; padding:8px 12px;
+    font-family:'Inter',sans-serif; font-size:13px; color:var(--ink); cursor:pointer; margin-bottom:14px;
+  }
+  .backBtn:hover{ border-color:var(--c1); }
+
+  .map-detail-flex{ display:flex; gap:16px; align-items:flex-start; }
+  .map-area-panel{
+    width:270px; flex:none; max-height:680px; overflow-y:auto;
+    background:var(--card); border:1px solid var(--border); border-radius:12px; padding:14px;
+  }
+  .map-area-group{ margin-bottom:16px; }
+  .map-area-group:last-child{ margin-bottom:0; }
+  .map-area-title{
+    font-weight:800; font-size:12px; color:#fff; background:var(--ink);
+    text-transform:uppercase; letter-spacing:.03em; padding:5px 9px; border-radius:6px;
+    display:inline-flex; align-items:center; gap:6px; margin-bottom:8px;
+  }
+  .map-area-pct{ color:#FDBA74; font-weight:900; }
+  .map-area-hub{
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    padding:6px 4px; font-size:13.5px; color:var(--ink); border-bottom:1px solid var(--border);
+  }
+  .map-area-hub:last-child{ border-bottom:none; }
+  .map-area-hub .hname{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .map-area-hub .hcount{ font-weight:800; color:var(--c1); flex:none; }
+  .map-area-empty{ color:var(--ink-soft); font-size:13px; text-align:center; padding:20px 0; }
+  .contractor-map-box{
+    flex:1; min-width:0;
+    background:#F1EFE9; border:1px solid var(--border); border-radius:14px;
+    overflow:hidden; position:relative;
+  }
+  .contractor-map-box svg{ width:100%; height:auto; display:block; }
+  #contractorMapSvg{ position:relative; z-index:1; }
+  .map-pin{ cursor:default; }
+  .map-pin path{ fill:#2563EB; }
+  .map-pin circle{ fill:#fff; }
+  .map-label-box rect{ fill:#fff; stroke:#DC2626; stroke-width:2; }
+  .map-label-box text{ font-size:8px; font-weight:800; fill:#111827; }
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <nav class="sidebar">
+    <div class="home-title">HOME</div>
+    <nav>
+      <button class="nav-item active" id="navDashboard"><span class="dot"></span>Contractors Target</button>
+      <button class="nav-item" id="navMap"><span class="dot"></span>Contractors Map</button>
+      <button class="nav-item" id="navAcq"><span class="dot"></span>ACQ Trend</button>
+      <button class="nav-item" id="navForecasts">
+        <span class="dot"></span>Forecasts
+        <span class="nav-arrow" id="forecastsArrow">&#9656;</span>
+      </button>
+      <div class="nav-sub-group" id="forecastsSubGroup" style="display:none;">
+        <button class="nav-item nav-sub" id="navForecastsBosta"><span class="dot"></span>Bosta</button>
+        <button class="nav-item nav-sub" id="navForecastsContractor"><span class="dot"></span>Contractor</button>
+      </div>
+    </nav>
+  </nav>
+  <div class="app-content" id="page-dashboard">
+
+<header>
+  <div class="title-block">
+    <h1>Contractors Target - Sep 2026</h1>
+    <p>Data from Sep 1 to Sep 21, 2026 — Last pulled: <span class="num" id="lastUpdated"></span></p>
+  </div>
+  <div class="controls">
+    <input type="text" id="searchInput" placeholder="Search contractor name...">
+    <select id="sortSelect">
+      <option value="missing-desc">Highest gap to target</option>
+      <option value="total-desc">Highest star count</option>
+      <option value="total-asc">Lowest star count</option>
+      <option value="name-asc">Name (A-Z)</option>
+    </select>
+  </div>
+</header>
+
+<div class="kpis" id="kpis"></div>
+
+<main>
+  <div id="mainArea"></div>
+</main>
+
+<script>
+const EMBEDDED_DATA = {"contractors": [{"name": "Meshwary Limo","total": 96,"statusCounts": {"New Star": 85,"Reactivate": 11}},{"name": "Pyramids","total": 72,"statusCounts": {"New Star": 60,"Reactivate": 12}},{"name": "Speed","total": 55,"statusCounts": {"New Star": 52,"Reactivate": 3}},{"name": "El Hana","total": 55,"statusCounts": {"New Star": 47,"Reactivate": 8}},{"name": "First","total": 54,"statusCounts": {"New Star": 51,"Reactivate": 3}},{"name": "Move Point","total": 48,"statusCounts": {"New Star": 41,"Reactivate": 7}},{"name": "Sprinta","total": 42,"statusCounts": {"New Star": 37,"Reactivate": 5}},{"name": "Egypt","total": 41,"statusCounts": {"Reactivate": 9,"New Star": 32}},{"name": "Smart","total": 38,"statusCounts": {"New Star": 28,"Reactivate": 10}},{"name": "Kayan Express","total": 38,"statusCounts": {"New Star": 33,"Reactivate": 5}},{"name": "Marzouk","total": 36,"statusCounts": {"New Star": 27,"Reactivate": 9}},{"name": "Full Speed","total": 35,"statusCounts": {"New Star": 29,"Reactivate": 6}},{"name": "Felengaz","total": 33,"statusCounts": {"New Star": 30,"Reactivate": 3}},{"name": "Capital Express","total": 31,"statusCounts": {"New Star": 28,"Reactivate": 3}},{"name": "El Alamia","total": 31,"statusCounts": {"Reactivate": 11,"New Star": 20}},{"name": "Dana","total": 28,"statusCounts": {"New Star": 18,"Reactivate": 10}},{"name": "Novax","total": 27,"statusCounts": {"Reactivate": 2,"New Star": 25}},{"name": "Top Line","total": 25,"statusCounts": {"New Star": 22,"Reactivate": 3}},{"name": "Speed Light","total": 25,"statusCounts": {"New Star": 23,"Reactivate": 2}},{"name": "GearZ","total": 23,"statusCounts": {"Reactivate": 3,"New Star": 20}},{"name": "Daynamic","total": 19,"statusCounts": {"New Star": 18,"Reactivate": 1}},{"name": "Owned Fleet – LM","total": 18,"statusCounts": {"New Star": 18}},{"name": "Star Team","total": 15,"statusCounts": {"New Star": 8,"Reactivate": 7}},{"name": "True Express","total": 11,"statusCounts": {"New Star": 8,"Reactivate": 3}},{"name": "Run Express","total": 9,"statusCounts": {"New Star": 8,"Reactivate": 1}},{"name": "Sahl","total": 9,"statusCounts": {"New Star": 8,"Reactivate": 1}},{"name": "Faz3a Express","total": 7,"statusCounts": {"New Star": 6,"Reactivate": 1}},{"name": "TMP","total": 6,"statusCounts": {"New Star": 5,"Reactivate": 1}},{"name": "Al Faraj Express","total": 6,"statusCounts": {"New Star": 5,"Reactivate": 1}},{"name": "For brothers","total": 6,"statusCounts": {"New Star": 6}},{"name": "OFD Express","total": 2,"statusCounts": {"New Star": 1,"Reactivate": 1}}],"statusTotals": {"New Star": 799,"Reactivate": 142}};
+const TARGETS = {"Pyramids": 200, "Meshwary Limo": 200, "El Hana": 150, "First": 150, "Smart": 80, "Full Speed": 100, "Sprinta": 100, "Felengaz": 80, "Top Line": 50, "Move Point": 200, "Marzouk": 150, "Novax": 100, "Egypt": 80, "Owned Fleet – LM": 1, "Speed": 150, "Dana": 100, "For brothers": 50, "El Alamia": 80, "True Express": 80, "Star Team": 50, "TMP": 50, "GearZ": 100, "Kayan Express": 100, "Daynamic": 50, "Run Express": 50, "Speed Light": 50, "Capital Express": 100, "Al Faraj Express": 50, "Sahl": 50, "Faz3a Express": 50, "Fleetify": 1, "OFD Express": 1, "Rido": 1, "Soft Courier": 1};
+const CONTRACTOR_HUBS = {"Marzouk": [{"name": "Shobra Hub","count": 4},{"name": "Haram Hub","count": 3},{"name": "Heliopolis Hub","count": 3},{"name": "New October Hub","count": 3},{"name": "El Obour Hub","count": 3},{"name": "Hadayk El Ahram Hub","count": 2},{"name": "October Hub","count": 2},{"name": "Hadayk October","count": 2},{"name": "Mokattam Hub","count": 2},{"name": "Katamya-New Hub","count": 2},{"name": "Helwan Hub","count": 1},{"name": "Marg Hub","count": 1},{"name": "El-Sharkia Hub","count": 1},{"name": "Faqous Hub","count": 1},{"name": "Sohag Hub","count": 1},{"name": "Imbaba Hub","count": 1},{"name": "Madinaty Hub","count": 1},{"name": "New Cairo Hub","count": 1},{"name": "Monufia Hub","count": 1},{"name": "Assiut Hub","count": 1}],"Smart": [{"name": "Monufia Hub","count": 7},{"name": "Imbaba Hub","count": 5},{"name": "Nasr City Hub","count": 4},{"name": "Mohandseen Hub","count": 3},{"name": "Zahraa Nasr City Hub","count": 2},{"name": "Haram Hub","count": 2},{"name": "Katamya-New Hub","count": 2},{"name": "Gesr Elsuez Hub","count": 2},{"name": "Smouha Hub","count": 1},{"name": "Helwan Hub","count": 1},{"name": "Mokattam Hub","count": 1},{"name": "El Obour Hub","count": 1},{"name": "Madinaty Hub","count": 1},{"name": "Heliopolis Hub","count": 1},{"name": "October Hub","count": 1},{"name": "Qalyoub Hub","count": 1},{"name": "Hadayk El Ahram Hub","count": 1},{"name": "New October Hub","count": 1},{"name": "Faisal Hub","count": 1}],"Meshwary Limo": [{"name": "El Obour Hub","count": 18},{"name": "Sohag Hub","count": 12},{"name": "Kafrelsheikh Hub","count": 7},{"name": "Gesr Elsuez Hub","count": 6},{"name": "Shobra Hub","count": 4},{"name": "October Hub","count": 4},{"name": "Hadayk El Ahram Hub","count": 3},{"name": "ElMahala Hub","count": 3},{"name": "Domiatta Hub","count": 3},{"name": "Mansoura-Talkha Hub","count": 3},{"name": "Behira Hub","count": 3},{"name": "El-Sharkia Hub","count": 3},{"name": "Heliopolis Hub","count": 2},{"name": "Port Said Hub","count": 2},{"name": "Helwan Hub","count": 2},{"name": "Smouha Hub","count": 2},{"name": "Huarghada Hub","count": 2},{"name": "Minya Hub","count": 2},{"name": "Beni Suef Hub","count": 2},{"name": "Luxor Hub","count": 1},{"name": "Zahraa El Maadi Hub","count": 1},{"name": "Dikernis Hub","count": 1},{"name": "Haram Hub","count": 1},{"name": "Downtown Hub","count": 1},{"name": "Fayoum Hub","count": 1},{"name": "Aswan Hub","count": 1},{"name": "Imbaba Hub","count": 1},{"name": "Qalyoub Hub","count": 1},{"name": "Banha Hub","count": 1},{"name": "Mokattam Hub","count": 1},{"name": "Madinaty Hub","count": 1},{"name": "Nasr City Hub","count": 1}],"Felengaz": [{"name": "El Obour Hub","count": 5},{"name": "October Hub","count": 5},{"name": "Zahraa El Maadi Hub","count": 3},{"name": "Imbaba Hub","count": 2},{"name": "Hadayk El Ahram Hub","count": 2},{"name": "Helwan Hub","count": 2},{"name": "Haram Hub","count": 2},{"name": "Madinaty Hub","count": 2},{"name": "Faisal Hub","count": 1},{"name": "Zahraa Nasr City Hub","count": 1},{"name": "Shobra Hub","count": 1},{"name": "Maadi Hub","count": 1},{"name": "Heliopolis Hub","count": 1},{"name": "Nasr City Hub","count": 1},{"name": "Mohandseen Hub","count": 1},{"name": "Downtown Hub","count": 1},{"name": "New October Hub","count": 1},{"name": "Mokattam Hub","count": 1}],"TMP": [{"name": "Hadayk El Ahram Hub","count": 1},{"name": "Madinaty Hub","count": 1},{"name": "Haram Hub","count": 1},{"name": "Maadi Hub","count": 1},{"name": "Qalyoub Hub","count": 1},{"name": "Faisal Hub","count": 1}],"Dana": [{"name": "El Obour Hub","count": 9},{"name": "Hadayk El Ahram Hub","count": 3},{"name": "Maadi Hub","count": 3},{"name": "Madinaty Hub","count": 2},{"name": "Katamya-New Hub","count": 2},{"name": "Hadayk October","count": 2},{"name": "Qalyoub Hub","count": 2},{"name": "Mokattam Hub","count": 1},{"name": "Kafrelsheikh Hub","count": 1},{"name": "New October Hub","count": 1},{"name": "October Hub","count": 1},{"name": "Zahraa El Maadi Hub","count": 1}],"Star Team": [{"name": "Downtown Hub","count": 3},{"name": "El Obour Hub","count": 2},{"name": "Zahraa El Maadi Hub","count": 2},{"name": "Beni Suef Hub","count": 1},{"name": "Tanta Hub","count": 1},{"name": "October Hub","count": 1},{"name": "Mohandseen Hub","count": 1},{"name": "Ismailia Hub","count": 1},{"name": "Gesr Elsuez Hub","count": 1},{"name": "ElMahala Hub","count": 1},{"name": "Faisal Hub","count": 1}],"Kayan Express": [{"name": "Madinaty Hub","count": 10},{"name": "Imbaba Hub","count": 6},{"name": "Gesr Elsuez Hub","count": 3},{"name": "Hadayk El Ahram Hub","count": 3},{"name": "Heliopolis Hub","count": 2},{"name": "Shobra Hub","count": 2},{"name": "El Obour Hub","count": 1},{"name": "New Cairo Hub","count": 1},{"name": "Qalyoub Hub","count": 1},{"name": "Katamya-New Hub","count": 1},{"name": "New October Hub","count": 1},{"name": "Banha Hub","count": 1},{"name": "Nasr City Hub","count": 1},{"name": "Shorouk Hub","count": 1},{"name": "Marg Hub","count": 1},{"name": "Maadi Hub","count": 1},{"name": "Tanta Hub","count": 1},{"name": "Faisal Hub","count": 1}],"True Express": [{"name": "Maadi Hub","count": 5},{"name": "Imbaba Hub","count": 1},{"name": "Fayoum Hub","count": 1},{"name": "Mokattam Hub","count": 1},{"name": "Helwan Hub","count": 1},{"name": "Gesr Elsuez Hub","count": 1},{"name": "El Obour Hub","count": 1}],"Top Line": [{"name": "New October Hub","count": 8},{"name": "El Obour Hub","count": 5},{"name": "October Hub","count": 4},{"name": "Gesr Elsuez Hub","count": 3},{"name": "Hadayk October","count": 3},{"name": "Hadayk El Ahram Hub","count": 1},{"name": "Madinaty Hub","count": 1}],"Full Speed": [{"name": "El Obour Hub","count": 5},{"name": "ElAgamy Hub","count": 5},{"name": "Nasr City Hub","count": 2},{"name": "Haram Hub","count": 2},{"name": "El-Sharkia Hub","count": 2},{"name": "Shorouk Hub","count": 2},{"name": "Heliopolis Hub","count": 2},{"name": "Imbaba Hub","count": 2},{"name": "Mokattam Hub","count": 2},{"name": "Gesr Elsuez Hub","count": 2},{"name": "October Hub","count": 2},{"name": "Shobra Hub","count": 1},{"name": "Faisal Hub","count": 1},{"name": "Downtown Hub","count": 1},{"name": "Kafrelsheikh Hub","count": 1},{"name": "Hadayk El Ahram Hub","count": 1},{"name": "Helwan Hub","count": 1},{"name": "Zahraa Nasr City Hub","count": 1}],"Speed": [{"name": "El Obour Hub","count": 12},{"name": "Imbaba Hub","count": 9},{"name": "Mokattam Hub","count": 5},{"name": "Sohag Hub","count": 3},{"name": "Katamya-New Hub","count": 3},{"name": "Shobra Hub","count": 3},{"name": "Mohandseen Hub","count": 2},{"name": "October Hub","count": 2},{"name": "Beni Suef Hub","count": 2},{"name": "Marg Hub","count": 2},{"name": "Downtown Hub","count": 2},{"name": "Zahraa El Maadi Hub","count": 2},{"name": "Maadi Hub","count": 1},{"name": "Helwan Hub","count": 1},{"name": "Sharm EL Sheikh Hub","count": 1},{"name": "Nasr City Hub","count": 1},{"name": "Gesr Elsuez Hub","count": 1},{"name": "Hadayk El Ahram Hub","count": 1},{"name": "Faisal Hub","count": 1},{"name": "Minya Hub","count": 1}],"First": [{"name": "Shobra Hub","count": 13},{"name": "Imbaba Hub","count": 12},{"name": "Maadi Hub","count": 5},{"name": "El Obour Hub","count": 5},{"name": "Marg Hub","count": 3},{"name": "Haram Hub","count": 3},{"name": "Faisal Hub","count": 2},{"name": "Hadayk El Ahram Hub","count": 2},{"name": "Nasr City Hub","count": 1},{"name": "Zahraa Nasr City Hub","count": 1},{"name": "El-Sharkia Hub","count": 1},{"name": "Smouha Hub","count": 1},{"name": "Mohandseen Hub","count": 1},{"name": "Monufia Hub","count": 1},{"name": "Gesr Elsuez Hub","count": 1},{"name": "Helwan Hub","count": 1},{"name": "Mokattam Hub","count": 1}],"Pyramids": [{"name": "Ismailia Hub","count": 8},{"name": "Khorshid Hub","count": 6},{"name": "El Obour Hub","count": 6},{"name": "Alexandria Hub","count": 6},{"name": "Aswan Hub","count": 4},{"name": "Beni Suef Hub","count": 4},{"name": "Imbaba Hub","count": 4},{"name": "Shobra Hub","count": 3},{"name": "Nasr City Hub","count": 2},{"name": "Smouha Hub","count": 2},{"name": "Behira Hub","count": 2},{"name": "Sharm EL Sheikh Hub","count": 2},{"name": "Sohag Hub","count": 2},{"name": "Helwan Hub","count": 2},{"name": "Faisal Hub","count": 2},{"name": "Mansoura-Talkha Hub","count": 2},{"name": "El-Mansoura Hub","count": 2},{"name": "Hadayk October","count": 1},{"name": "Haram Hub","count": 1},{"name": "Port Said Hub","count": 1},{"name": "Gesr Elsuez Hub","count": 1},{"name": "Matrouh Hub","count": 1},{"name": "Suez Hub","count": 1},{"name": "October Hub","count": 1},{"name": "Kafrelsheikh Hub","count": 1},{"name": "Hadayk El Ahram Hub","count": 1},{"name": "Domiatta Hub","count": 1},{"name": "Hawamdya Hub","count": 1},{"name": "Monufia Hub","count": 1},{"name": "Maadi Hub","count": 1}],"El Hana": [{"name": "Ismailia Hub","count": 10},{"name": "El-Sharkia Hub","count": 10},{"name": "Fayoum Hub","count": 6},{"name": "Imbaba Hub","count": 5},{"name": "Mansoura-Talkha Hub","count": 4},{"name": "El-Mansoura Hub","count": 4},{"name": "Gesr Elsuez Hub","count": 4},{"name": "Qalyoub Hub","count": 2},{"name": "Sharm EL Sheikh Hub","count": 2},{"name": "Suez Hub","count": 2},{"name": "Katamya-New Hub","count": 2},{"name": "Dikernis Hub","count": 1},{"name": "Beni Suef Hub","count": 1},{"name": "Banha Hub","count": 1},{"name": "Zahraa Nasr City Hub","count": 1}],"Move Point": [{"name": "Hadayk El Ahram Hub","count": 5},{"name": "El Obour Hub","count": 4},{"name": "Banha Hub","count": 4},{"name": "Behira Hub","count": 3},{"name": "Port Said Hub","count": 3},{"name": "Tanta Hub","count": 3},{"name": "Helwan Hub","count": 2},{"name": "Zahraa El Maadi Hub","count": 2},{"name": "New October Hub","count": 2},{"name": "Shobra Hub","count": 2},{"name": "Downtown Hub","count": 2},{"name": "Haram Hub","count": 2},{"name": "Qalyoub Hub","count": 2},{"name": "Mansoura-Talkha Hub","count": 2},{"name": "October Hub","count": 1},{"name": "Mokattam Hub","count": 1},{"name": "ElMahala Hub","count": 1},{"name": "New Cairo Hub","count": 1},{"name": "Beni Suef Hub","count": 1},{"name": "Imbaba Hub","count": 1},{"name": "El-Sharkia Hub","count": 1},{"name": "Nasr City Hub","count": 1},{"name": "Shorouk Hub","count": 1},{"name": "Kafrelsheikh Hub","count": 1}],"Al Faraj Express": [{"name": "Shobra Hub","count": 4},{"name": "El Obour Hub","count": 1},{"name": "Imbaba Hub","count": 1}],"Capital Express": [{"name": "El Obour Hub","count": 6},{"name": "Gesr Elsuez Hub","count": 3},{"name": "Nasr City Hub","count": 3},{"name": "Mokattam Hub","count": 3},{"name": "Domiatta Hub","count": 3},{"name": "Katamya-New Hub","count": 2},{"name": "Shobra Hub","count": 2},{"name": "Madinaty Hub","count": 2},{"name": "Marg Hub","count": 1},{"name": "Mohandseen Hub","count": 1},{"name": "Qalyoub Hub","count": 1},{"name": "Hadayk El Ahram Hub","count": 1},{"name": "October Hub","count": 1},{"name": "Kafrelsheikh Hub","count": 1},{"name": "Heliopolis Hub","count": 1}],"For brothers": [{"name": "El Obour Hub","count": 3},{"name": "Nasr City Hub","count": 1},{"name": "October Hub","count": 1},{"name": "Shobra Hub","count": 1}],"Speed Light": [{"name": "Minya Hub","count": 12},{"name": "Beni Suef Hub","count": 4},{"name": "Assiut Hub","count": 4},{"name": "Huarghada Hub","count": 3},{"name": "Qena Hub","count": 2}],"Egypt": [{"name": "Smouha Hub","count": 6},{"name": "Haram Hub","count": 6},{"name": "Alexandria Hub","count": 5},{"name": "Tanta Hub","count": 3},{"name": "Khorshid Hub","count": 3},{"name": "Faisal Hub","count": 2},{"name": "ElAgamy Hub","count": 2},{"name": "Nasr City Hub","count": 2},{"name": "Imbaba Hub","count": 2},{"name": "New October Hub","count": 1},{"name": "Suez Hub","count": 1},{"name": "Hadayk El Ahram Hub","count": 1},{"name": "Mokattam Hub","count": 1},{"name": "Hadayk October","count": 1},{"name": "Behira Hub","count": 1},{"name": "El Obour Hub","count": 1},{"name": "Katamya-New Hub","count": 1},{"name": "Shobra Hub","count": 1},{"name": "ElMahala Hub","count": 1}],"Novax": [{"name": "El Obour Hub","count": 6},{"name": "Shobra Hub","count": 4},{"name": "Haram Hub","count": 4},{"name": "Hadayk El Ahram Hub","count": 3},{"name": "Mokattam Hub","count": 2},{"name": "Downtown Hub","count": 1},{"name": "Faisal Hub","count": 1},{"name": "Helwan Hub","count": 1},{"name": "ElMahala Hub","count": 1},{"name": "Heliopolis Hub","count": 1},{"name": "October Hub","count": 1},{"name": "New October Hub","count": 1},{"name": "Hawamdya Hub","count": 1}],"El Alamia": [{"name": "El Obour Hub","count": 8},{"name": "Nasr City Hub","count": 4},{"name": "Shobra Hub","count": 4},{"name": "El-Sharkia Hub","count": 4},{"name": "Downtown Hub","count": 3},{"name": "Gesr Elsuez Hub","count": 2},{"name": "Shorouk Hub","count": 2},{"name": "El-Mansoura Hub","count": 1},{"name": "New October Hub","count": 1},{"name": "Tanta Hub","count": 1},{"name": "Madinaty Hub","count": 1}],"Sprinta": [{"name": "El Obour Hub","count": 7},{"name": "Gesr Elsuez Hub","count": 6},{"name": "Domiatta Hub","count": 5},{"name": "Nasr City Hub","count": 5},{"name": "Mokattam Hub","count": 3},{"name": "Shobra Hub","count": 3},{"name": "Faqous Hub","count": 2},{"name": "October Hub","count": 1},{"name": "Imbaba Hub","count": 1},{"name": "Shorouk Hub","count": 1},{"name": "Faisal Hub","count": 1},{"name": "Mohandseen Hub","count": 1},{"name": "Qalyoub Hub","count": 1},{"name": "Madinaty Hub","count": 1},{"name": "Heliopolis Hub","count": 1},{"name": "Hadayk El Ahram Hub","count": 1},{"name": "Marg Hub","count": 1},{"name": "Haram Hub","count": 1}],"Daynamic": [{"name": "El Obour Hub","count": 5},{"name": "Imbaba Hub","count": 4},{"name": "Hadayk El Ahram Hub","count": 3},{"name": "Mohandseen Hub","count": 3},{"name": "Haram Hub","count": 2},{"name": "New Cairo Hub","count": 1},{"name": "Helwan Hub","count": 1}],"GearZ": [{"name": "Hadayk El Ahram Hub","count": 6},{"name": "El Obour Hub","count": 5},{"name": "October Hub","count": 4},{"name": "Katamya-New Hub","count": 2},{"name": "Downtown Hub","count": 2},{"name": "New Cairo Hub","count": 1},{"name": "Shobra Hub","count": 1},{"name": "Marg Hub","count": 1},{"name": "Helwan Hub","count": 1}],"Run Express": [{"name": "Luxor Hub","count": 4},{"name": "Qena Hub","count": 2},{"name": "Aswan Hub","count": 2},{"name": "Huarghada Hub","count": 1}],"Owned Fleet – LM": [{"name": "October Hub","count": 5},{"name": "Heliopolis Hub","count": 4},{"name": "Madinaty Hub","count": 4},{"name": "New October Hub","count": 1},{"name": "Maadi Hub","count": 1},{"name": "Katamya-New Hub","count": 1},{"name": "El Obour Hub","count": 1},{"name": "Zahraa El Maadi Hub","count": 1}],"Sahl": [{"name": "El Obour Hub","count": 3},{"name": "Hawamdya Hub","count": 2},{"name": "Imbaba Hub","count": 1},{"name": "Hadayk El Ahram Hub","count": 1},{"name": "Minya Hub","count": 1},{"name": "Gesr Elsuez Hub","count": 1}],"Faz3a Express": [{"name": "Imbaba Hub","count": 3},{"name": "Hadayk El Ahram Hub","count": 1},{"name": "Qalyoub Hub","count": 1},{"name": "El Obour Hub","count": 1},{"name": "Shobra Hub","count": 1}],"OFD Express": [{"name": "Imbaba Hub","count": 1},{"name": "October Hub","count": 1}]};
+const TODAY_ACQ = {"El Hana": 6,"GearZ": 1,"Sprinta": 7,"Move Point": 1,"Capital Express": 3,"Al Faraj Express": 3,"First": 3,"Kayan Express": 5,"Faz3a Express": 1,"Dana": 1,"El Alamia": 3,"TMP": 1,"Sahl": 1,"Smart": 1,"Speed": 1,"Pyramids": 3,"Felengaz": 1,"Egypt": 2,"Meshwary Limo": 2,"Full Speed": 1,"Owned Fleet – LM": 2,"Marzouk": 2,"OFD Express": 1};
+const WEEK_TOTALS = {"1": 129,"2": 285,"3": 358};
+const HUB_DAILY = {"Helwan Hub": {"Sep 1": {"New Star": 1},"Sep 2": {"New Star": 3},"Sep 6": {"New Star": 1},"Sep 8": {"New Star": 2},"Sep 10": {"New Star": 1,"Reactivate": 1},"Sep 12": {"New Star": 2},"Sep 15": {"New Star": 1},"Sep 16": {"New Star": 1},"Sep 17": {"New Star": 1},"Sep 19": {"New Star": 1},"Sep 20": {"New Star": 2}},"Nasr City Hub": {"Sep 1": {"New Star": 3,"Reactivate": 1},"Sep 2": {"New Star": 2},"Sep 5": {"New Star": 2},"Sep 7": {"New Star": 3},"Sep 8": {"New Star": 6},"Sep 12": {"New Star": 3},"Sep 14": {"New Star": 1},"Sep 15": {"New Star": 2},"Sep 16": {"New Star": 1},"Sep 17": {"Reactivate": 1},"Sep 21": {"New Star": 4}},"Sohag Hub": {"Sep 1": {"New Star": 1},"Sep 3": {"New Star": 2,"Reactivate": 1},"Sep 6": {"New Star": 2},"Sep 7": {"New Star": 2},"Sep 10": {"New Star": 2},"Sep 13": {"New Star": 1},"Sep 15": {"New Star": 1},"Sep 16": {"New Star": 2},"Sep 20": {"New Star": 3},"Sep 21": {"Reactivate": 1}},"El Obour Hub": {"Sep 1": {"New Star": 8},"Sep 2": {"New Star": 7},"Sep 3": {"New Star": 4,"Reactivate": 1},"Sep 5": {"New Star": 1},"Sep 7": {"New Star": 4},"Sep 8": {"New Star": 2,"Reactivate": 1},"Sep 9": {"New Star": 5},"Sep 10": {"New Star": 2},"Sep 12": {"New Star": 13,"Reactivate": 2},"Sep 13": {"New Star": 6,"Reactivate": 2},"Sep 14": {"New Star": 11,"Reactivate": 1},"Sep 15": {"New Star": 8,"Reactivate": 3},"Sep 16": {"New Star": 13,"Reactivate": 2},"Sep 17": {"New Star": 6,"Reactivate": 1},"Sep 19": {"New Star": 4,"Reactivate": 2},"Sep 20": {"New Star": 12,"Reactivate": 2},"Sep 21": {"New Star": 1}},"Hadayk El Ahram Hub": {"Sep 1": {"New Star": 3,"Reactivate": 1},"Sep 5": {"New Star": 1,"Reactivate": 1},"Sep 6": {"Reactivate": 1},"Sep 7": {"New Star": 2},"Sep 8": {"New Star": 1},"Sep 10": {"Reactivate": 1},"Sep 12": {"New Star": 4},"Sep 13": {"New Star": 4},"Sep 14": {"New Star": 5,"Reactivate": 1},"Sep 15": {"New Star": 4},"Sep 16": {"New Star": 2},"Sep 17": {"New Star": 6},"Sep 19": {"New Star": 3},"Sep 20": {"New Star": 1},"Sep 21": {"New Star": 2}},"Heliopolis Hub": {"Sep 1": {"New Star": 1},"Sep 3": {"New Star": 2},"Sep 5": {"New Star": 1,"Reactivate": 1},"Sep 6": {"Reactivate": 1},"Sep 7": {"New Star": 1},"Sep 8": {"New Star": 2},"Sep 9": {"New Star": 1},"Sep 10": {"New Star": 1},"Sep 14": {"New Star": 2},"Sep 15": {"New Star": 1},"Sep 17": {"New Star": 1},"Sep 19": {"New Star": 2},"Sep 20": {"Reactivate": 1}},"Beni Suef Hub": {"Sep 1": {"New Star": 1},"Sep 3": {"New Star": 1},"Sep 6": {"New Star": 3},"Sep 9": {"New Star": 3},"Sep 10": {"New Star": 2},"Sep 13": {"New Star": 1,"Reactivate": 1},"Sep 17": {"New Star": 2},"Sep 20": {"New Star": 1}},"Madinaty Hub": {"Sep 1": {"New Star": 1,"Reactivate": 1},"Sep 2": {"New Star": 1},"Sep 6": {"New Star": 2,"Reactivate": 1},"Sep 7": {"Reactivate": 1},"Sep 8": {"New Star": 1,"Reactivate": 1},"Sep 10": {"New Star": 1},"Sep 13": {"New Star": 3,"Reactivate": 1},"Sep 14": {"New Star": 1,"Reactivate": 1},"Sep 15": {"New Star": 1},"Sep 16": {"New Star": 2,"Reactivate": 1},"Sep 17": {"Reactivate": 1},"Sep 19": {"Reactivate": 1},"Sep 20": {"New Star": 1,"Reactivate": 2},"Sep 21": {"New Star": 2}},"Maadi Hub": {"Sep 1": {"New Star": 2},"Sep 2": {"New Star": 1},"Sep 3": {"New Star": 1},"Sep 7": {"New Star": 1},"Sep 8": {"New Star": 3,"Reactivate": 1},"Sep 9": {"New Star": 1},"Sep 13": {"New Star": 2},"Sep 14": {"New Star": 2},"Sep 15": {"Reactivate": 1},"Sep 16": {"New Star": 1},"Sep 19": {"New Star": 1},"Sep 21": {"New Star": 2}},"Gesr Elsuez Hub": {"Sep 1": {"New Star": 2},"Sep 2": {"New Star": 1},"Sep 5": {"Reactivate": 1},"Sep 6": {"New Star": 1,"Reactivate": 1},"Sep 7": {"Reactivate": 1},"Sep 8": {"New Star": 1},"Sep 9": {"New Star": 1},"Sep 10": {"New Star": 1},"Sep 12": {"New Star": 2,"Reactivate": 2},"Sep 13": {"New Star": 5,"Reactivate": 2},"Sep 14": {"New Star": 2},"Sep 15": {"New Star": 1,"Reactivate": 1},"Sep 16": {"New Star": 2,"Reactivate": 1},"Sep 19": {"New Star": 3},"Sep 20": {"New Star": 2},"Sep 21": {"New Star": 2,"Reactivate": 2}},"Mokattam Hub": {"Sep 1": {"New Star": 1,"Reactivate": 1},"Sep 3": {"New Star": 2,"Reactivate": 1},"Sep 6": {"New Star": 1,"Reactivate": 1},"Sep 7": {"New Star": 1,"Reactivate": 1},"Sep 9": {"New Star": 3},"Sep 10": {"New Star": 1},"Sep 13": {"New Star": 1,"Reactivate": 1},"Sep 15": {"New Star": 2},"Sep 16": {"New Star": 3},"Sep 17": {"New Star": 3},"Sep 19": {"New Star": 1},"Sep 21": {"New Star": 1}},"Khorshid Hub": {"Sep 1": {"New Star": 1},"Sep 7": {"New Star": 1},"Sep 13": {"New Star": 1},"Sep 14": {"New Star": 1,"Reactivate": 1},"Sep 17": {"New Star": 2},"Sep 19": {"New Star": 2}},"Ismailia Hub": {"Sep 1": {"New Star": 4},"Sep 3": {"New Star": 2},"Sep 5": {"New Star": 1},"Sep 6": {"New Star": 2},"Sep 9": {"New Star": 1},"Sep 10": {"Reactivate": 1},"Sep 13": {"New Star": 2},"Sep 15": {"New Star": 2},"Sep 16": {"New Star": 2},"Sep 17": {"New Star": 2}},"Marg Hub": {"Sep 1": {"New Star": 1},"Sep 2": {"New Star": 2},"Sep 7": {"New Star": 1},"Sep 8": {"New Star": 1},"Sep 12": {"New Star": 1},"Sep 15": {"New Star": 2},"Sep 19": {"New Star": 1},"Sep 21": {"New Star": 1}},"Hadayk October": {"Sep 1": {"New Star": 1},"Sep 9": {"New Star": 1},"Sep 12": {"Reactivate": 1},"Sep 15": {"New Star": 1},"Sep 16": {"New Star": 2},"Sep 19": {"New Star": 1},"Sep 20": {"New Star": 2}},"Katamya-New Hub": {"Sep 1": {"New Star": 1},"Sep 3": {"New Star": 1},"Sep 7": {"New Star": 2},"Sep 9": {"New Star": 1},"Sep 12": {"New Star": 2,"Reactivate": 1},"Sep 14": {"New Star": 1},"Sep 15": {"Reactivate": 1},"Sep 17": {"New Star": 3},"Sep 19": {"New Star": 2,"Reactivate": 1},"Sep 21": {"New Star": 1,"Reactivate": 1}},"Imbaba Hub": {"Sep 1": {"New Star": 1},"Sep 2": {"New Star": 2,"Reactivate": 1},"Sep 3": {"New Star": 5},"Sep 5": {"New Star": 2},"Sep 6": {"New Star": 1,"Reactivate": 2},"Sep 7": {"New Star": 2},"Sep 8": {"New Star": 7,"Reactivate": 1},"Sep 9": {"New Star": 6},"Sep 10": {"New Star": 4},"Sep 12": {"New Star": 4,"Reactivate": 1},"Sep 13": {"New Star": 2},"Sep 14": {"New Star": 1},"Sep 15": {"New Star": 2,"Reactivate": 1},"Sep 16": {"New Star": 6},"Sep 17": {"New Star": 1},"Sep 19": {"New Star": 4},"Sep 20": {"New Star": 4},"Sep 21": {"New Star": 2}},"Port Said Hub": {"Sep 1": {"New Star": 1},"Sep 5": {"Reactivate": 1},"Sep 6": {"New Star": 1},"Sep 9": {"New Star": 1},"Sep 13": {"New Star": 1},"Sep 16": {"New Star": 1}},"Minya Hub": {"Sep 1": {"New Star": 1},"Sep 6": {"New Star": 1},"Sep 7": {"Reactivate": 1},"Sep 8": {"New Star": 4},"Sep 9": {"New Star": 1},"Sep 10": {"New Star": 1},"Sep 12": {"New Star": 1},"Sep 13": {"New Star": 2},"Sep 16": {"New Star": 1},"Sep 17": {"New Star": 2},"Sep 20": {"New Star": 1}},"Smouha Hub": {"Sep 1": {"Reactivate": 2},"Sep 2": {"Reactivate": 1},"Sep 3": {"New Star": 1},"Sep 5": {"New Star": 1},"Sep 7": {"New Star": 1},"Sep 8": {"New Star": 1,"Reactivate": 1},"Sep 13": {"New Star": 1},"Sep 14": {"New Star": 1},"Sep 20": {"New Star": 1,"Reactivate": 1}},"Downtown Hub": {"Sep 1": {"Reactivate": 1},"Sep 2": {"New Star": 1},"Sep 9": {"New Star": 1},"Sep 10": {"New Star": 1},"Sep 12": {"New Star": 1},"Sep 14": {"New Star": 3},"Sep 15": {"New Star": 2,"Reactivate": 1},"Sep 17": {"New Star": 2},"Sep 19": {"New Star": 1},"Sep 20": {"New Star": 1,"Reactivate": 1}},"Shobra Hub": {"Sep 2": {"New Star": 6,"Reactivate": 1},"Sep 3": {"New Star": 2},"Sep 5": {"New Star": 6,"Reactivate": 1},"Sep 6": {"New Star": 3},"Sep 7": {"New Star": 2},"Sep 8": {"New Star": 3,"Reactivate": 1},"Sep 9": {"New Star": 1},"Sep 10": {"New Star": 2},"Sep 12": {"New Star": 3},"Sep 13": {"New Star": 2},"Sep 14": {"New Star": 2},"Sep 15": {"New Star": 2},"Sep 16": {"New Star": 2},"Sep 17": {"New Star": 1},"Sep 19": {"New Star": 3,"Reactivate": 1},"Sep 20": {"New Star": 1,"Reactivate": 1},"Sep 21": {"New Star": 7,"Reactivate": 1}},"October Hub": {"Sep 2": {"New Star": 3},"Sep 3": {"New Star": 2},"Sep 5": {"New Star": 1},"Sep 7": {"New Star": 3},"Sep 8": {"New Star": 3,"Reactivate": 3},"Sep 9": {"New Star": 3,"Reactivate": 1},"Sep 10": {"New Star": 2},"Sep 12": {"New Star": 3,"Reactivate": 1},"Sep 13": {"New Star": 2,"Reactivate": 1},"Sep 14": {"New Star": 1},"Sep 16": {"New Star": 2},"Sep 17": {"New Star": 2},"Sep 19": {"New Star": 2},"Sep 20": {"New Star": 1},"Sep 21": {"New Star": 1,"Reactivate": 1}},"New October Hub": {"Sep 2": {"New Star": 1},"Sep 3": {"New Star": 2},"Sep 5": {"New Star": 2,"Reactivate": 1},"Sep 9": {"New Star": 1},"Sep 10": {"New Star": 2},"Sep 13": {"Reactivate": 1},"Sep 14": {"New Star": 1},"Sep 15": {"New Star": 4},"Sep 16": {"New Star": 1,"Reactivate": 1},"Sep 17": {"New Star": 2},"Sep 20": {"New Star": 2}},"Domiatta Hub": {"Sep 2": {"New Star": 1},"Sep 5": {"New Star": 2},"Sep 8": {"New Star": 1},"Sep 14": {"New Star": 1},"Sep 15": {"New Star": 2},"Sep 19": {"New Star": 2},"Sep 21": {"New Star": 3}},"Tanta Hub": {"Sep 2": {"New Star": 1},"Sep 6": {"Reactivate": 2},"Sep 7": {"New Star": 1},"Sep 8": {"New Star": 1},"Sep 12": {"New Star": 1},"Sep 15": {"New Star": 1},"Sep 20": {"Reactivate": 1},"Sep 21": {"New Star": 1}},"Haram Hub": {"Sep 2": {"New Star": 1,"Reactivate": 1},"Sep 3": {"New Star": 3},"Sep 5": {"Reactivate": 1},"Sep 6": {"New Star": 2},"Sep 7": {"New Star": 4},"Sep 9": {"New Star": 2,"Reactivate": 1},"Sep 10": {"New Star": 1},"Sep 13": {"New Star": 2},"Sep 14": {"New Star": 2},"Sep 15": {"New Star": 1},"Sep 16": {"New Star": 2},"Sep 17": {"New Star": 1},"Sep 19": {"New Star": 2},"Sep 20": {"New Star": 1,"Reactivate": 1},"Sep 21": {"New Star": 2}},"Mansoura-Talkha Hub": {"Sep 2": {"New Star": 1},"Sep 5": {"New Star": 1},"Sep 9": {"New Star": 1,"Reactivate": 2},"Sep 12": {"New Star": 1},"Sep 13": {"New Star": 1},"Sep 14": {"New Star": 2},"Sep 17": {"New Star": 1},"Sep 19": {"New Star": 1}},"Alexandria Hub": {"Sep 2": {"Reactivate": 1},"Sep 5": {"New Star": 1},"Sep 6": {"New Star": 1},"Sep 8": {"New Star": 2},"Sep 12": {"New Star": 2},"Sep 14": {"New Star": 1},"Sep 19": {"New Star": 2},"Sep 21": {"New Star": 1}},"New Cairo Hub": {"Sep 2": {"Reactivate": 1},"Sep 6": {"New Star": 1},"Sep 9": {"New Star": 2},"Sep 13": {"Reactivate": 1}},"Fayoum Hub": {"Sep 2": {"Reactivate": 1},"Sep 3": {"Reactivate": 1},"Sep 5": {"Reactivate": 1},"Sep 6": {"New Star": 1},"Sep 8": {"New Star": 1},"Sep 14": {"New Star": 1},"Sep 15": {"New Star": 1},"Sep 21": {"New Star": 1}},"Qena Hub": {"Sep 3": {"New Star": 2},"Sep 9": {"New Star": 1},"Sep 13": {"Reactivate": 1}},"Zahraa El Maadi Hub": {"Sep 3": {"New Star": 1,"Reactivate": 1},"Sep 8": {"New Star": 2},"Sep 10": {"New Star": 1},"Sep 13": {"New Star": 1},"Sep 15": {"New Star": 1},"Sep 19": {"New Star": 1},"Sep 20": {"New Star": 1,"Reactivate": 1},"Sep 21": {"New Star": 2}},"Zahraa Nasr City Hub": {"Sep 3": {"New Star": 1},"Sep 5": {"New Star": 1},"Sep 7": {"New Star": 1},"Sep 9": {"New Star": 1},"Sep 17": {"New Star": 1},"Sep 19": {"Reactivate": 1}},"Mohandseen Hub": {"Sep 3": {"New Star": 1},"Sep 5": {"New Star": 1},"Sep 6": {"New Star": 1},"Sep 8": {"New Star": 1},"Sep 9": {"New Star": 3},"Sep 10": {"New Star": 1},"Sep 12": {"Reactivate": 1},"Sep 13": {"New Star": 1},"Sep 14": {"New Star": 1},"Sep 15": {"New Star": 1},"Sep 19": {"New Star": 1}},"Faisal Hub": {"Sep 3": {"New Star": 2},"Sep 5": {"Reactivate": 1},"Sep 6": {"New Star": 2},"Sep 10": {"New Star": 1},"Sep 12": {"New Star": 1},"Sep 14": {"New Star": 1},"Sep 16": {"New Star": 1},"Sep 19": {"New Star": 2},"Sep 20": {"Reactivate": 1},"Sep 21": {"New Star": 3}},"El-Mansoura Hub": {"Sep 3": {"New Star": 1},"Sep 12": {"New Star": 1},"Sep 16": {"Reactivate": 1},"Sep 19": {"New Star": 2,"Reactivate": 1},"Sep 21": {"New Star": 1}},"Dikernis Hub": {"Sep 3": {"New Star": 1},"Sep 9": {"New Star": 1}},"El-Sharkia Hub": {"Sep 3": {"New Star": 2},"Sep 5": {"New Star": 1},"Sep 7": {"New Star": 1,"Reactivate": 1},"Sep 8": {"New Star": 1},"Sep 10": {"New Star": 3,"Reactivate": 1},"Sep 12": {"New Star": 1,"Reactivate": 1},"Sep 13": {"New Star": 2},"Sep 14": {"New Star": 1},"Sep 15": {"New Star": 2},"Sep 16": {"New Star": 2},"Sep 17": {"New Star": 1},"Sep 20": {"New Star": 1},"Sep 21": {"New Star": 1}},"Monufia Hub": {"Sep 5": {"New Star": 1},"Sep 6": {"New Star": 1},"Sep 10": {"New Star": 1},"Sep 13": {"Reactivate": 1},"Sep 17": {"New Star": 3},"Sep 19": {"New Star": 1},"Sep 20": {"New Star": 1,"Reactivate": 1}},"Huarghada Hub": {"Sep 5": {"New Star": 1},"Sep 13": {"New Star": 1},"Sep 14": {"New Star": 2},"Sep 16": {"New Star": 1},"Sep 17": {"New Star": 1}},"Luxor Hub": {"Sep 5": {"New Star": 1},"Sep 6": {"New Star": 2},"Sep 15": {"New Star": 2}},"Aswan Hub": {"Sep 5": {"New Star": 2},"Sep 9": {"New Star": 2},"Sep 15": {"Reactivate": 2},"Sep 17": {"New Star": 1}},"Kafrelsheikh Hub": {"Sep 5": {"New Star": 2},"Sep 7": {"New Star": 1},"Sep 8": {"New Star": 1},"Sep 10": {"New Star": 2},"Sep 14": {"New Star": 2},"Sep 17": {"New Star": 1},"Sep 19": {"New Star": 2},"Sep 20": {"New Star": 1}},"Shorouk Hub": {"Sep 5": {"New Star": 1},"Sep 10": {"New Star": 1},"Sep 14": {"New Star": 1},"Sep 15": {"New Star": 1},"Sep 19": {"New Star": 1},"Sep 20": {"New Star": 1},"Sep 21": {"New Star": 1}},"Hawamdya Hub": {"Sep 5": {"New Star": 1},"Sep 16": {"New Star": 1,"Reactivate": 1},"Sep 20": {"New Star": 1}},"Qalyoub Hub": {"Sep 5": {"Reactivate": 1},"Sep 9": {"New Star": 2},"Sep 10": {"Reactivate": 1},"Sep 13": {"New Star": 1},"Sep 14": {"Reactivate": 1},"Sep 15": {"New Star": 1},"Sep 16": {"New Star": 1,"Reactivate": 3},"Sep 17": {"New Star": 1},"Sep 21": {"New Star": 1}},"Behira Hub": {"Sep 5": {"Reactivate": 1},"Sep 6": {"New Star": 2},"Sep 7": {"New Star": 1},"Sep 12": {"New Star": 1},"Sep 13": {"New Star": 1},"Sep 14": {"New Star": 1,"Reactivate": 1},"Sep 15": {"New Star": 1}},"Matrouh Hub": {"Sep 6": {"New Star": 1}},"Sharm EL Sheikh Hub": {"Sep 6": {"New Star": 2},"Sep 9": {"New Star": 1},"Sep 14": {"New Star": 1},"Sep 21": {"Reactivate": 1}},"Suez Hub": {"Sep 6": {"New Star": 1},"Sep 8": {"New Star": 1},"Sep 15": {"New Star": 1},"Sep 19": {"New Star": 1}},"ElMahala Hub": {"Sep 6": {"New Star": 2},"Sep 8": {"New Star": 1},"Sep 9": {"New Star": 1},"Sep 17": {"New Star": 1},"Sep 20": {"New Star": 2}},"ElAgamy Hub": {"Sep 6": {"New Star": 1},"Sep 13": {"New Star": 1},"Sep 14": {"New Star": 1},"Sep 20": {"New Star": 3},"Sep 21": {"New Star": 1}},"Faqous Hub": {"Sep 7": {"New Star": 1},"Sep 10": {"New Star": 1},"Sep 12": {"New Star": 1}},"Assiut Hub": {"Sep 7": {"New Star": 1},"Sep 17": {"New Star": 2},"Sep 19": {"New Star": 1},"Sep 21": {"New Star": 1}},"Banha Hub": {"Sep 9": {"New Star": 1},"Sep 12": {"New Star": 1},"Sep 13": {"New Star": 1},"Sep 14": {"New Star": 1,"Reactivate": 1},"Sep 17": {"New Star": 1,"Reactivate": 1}}};
+const HUB_DAILY_DATES = ["Sep 1","Sep 2","Sep 3","Sep 5","Sep 6","Sep 7","Sep 8","Sep 9","Sep 10","Sep 12","Sep 13","Sep 14","Sep 15","Sep 16","Sep 17","Sep 19","Sep 20","Sep 21"];
+const WEEK_BY_CONTRACTOR = {"Marzouk": {"1": 4,"2": 13,"3": 12},"Smart": {"1": 9,"2": 13,"3": 9},"Meshwary Limo": {"1": 12,"2": 29,"3": 41},"Felengaz": {"1": 6,"2": 4,"3": 20},"TMP": {"1": 2,"2": 1,"3": 2},"Dana": {"1": 4,"2": 3,"3": 14},"Star Team": {"1": 3,"2": 5,"3": 3},"Kayan Express": {"1": 2,"2": 14,"3": 12},"True Express": {"1": 3,"2": 3,"3": 5},"Top Line": {"1": 6,"2": 7,"3": 7},"Full Speed": {"1": 5,"2": 12,"3": 14},"Speed": {"1": 4,"2": 15,"3": 25},"First": {"1": 13,"2": 21,"3": 10},"Pyramids": {"1": 8,"2": 29,"3": 22},"El Hana": {"1": 10,"2": 14,"3": 18},"Move Point": {"1": 3,"2": 17,"3": 26},"Al Faraj Express": {"1": 1},"Capital Express": {"1": 1,"2": 7,"3": 16},"For brothers": {"1": 4,"2": 1,"3": 1},"Speed Light": {"1": 2,"2": 11,"3": 10},"Egypt": {"1": 4,"2": 17,"3": 11},"Novax": {"1": 5,"2": 10,"3": 11},"El Alamia": {"1": 3,"2": 8,"3": 11},"Sprinta": {"1": 5,"2": 12,"3": 13},"Daynamic": {"1": 1,"2": 6,"3": 10},"GearZ": {"1": 1,"2": 5,"3": 14},"Run Express": {"1": 2,"2": 2,"3": 5},"Owned Fleet – LM": {"1": 6,"2": 3,"3": 6},"Sahl": {"2": 2,"3": 4},"Faz3a Express": {"2": 1,"3": 5},"OFD Express": {"3": 1}};
+
+const WEEK_DEFS = [
+  { id: 1, label: "Week 1", range: "Sep 1–3", days: 3, partial: true },
+  { id: 2, label: "Week 2", range: "Sep 5–10", days: 6, partial: false },
+  { id: 3, label: "Week 3", range: "Sep 12–17", days: 6, partial: false },
+  { id: 4, label: "Week 4", range: "Sep 19–24 (upcoming)", days: 6, partial: true, forecast: true },
+  { id: 5, label: "Week 5", range: "Sep 26–30 (upcoming)", days: 5, partial: true, forecast: true }
+];
+
+
+if (window.ChartDataLabels) { Chart.register(ChartDataLabels); }
+
+const STATUS_COLORS = [
+  {c:"var(--c1)", bg:"var(--c1-bg)"},
+  {c:"var(--c2)", bg:"var(--c2-bg)"},
+];
+const PIE_COLORS = ["#4472C4","#C0504D","#9BBB59","#8064A2","#4BACC6","#F79646",
+                     "#2E75B6","#A5514D","#70AD47","#5B4E96","#31859B","#E0912B",
+                     "#7F9DD1","#D08A87","#B4CB8E","#9A8DBB","#7EBFCB","#F2B876",
+                     "#A6BDE0","#E6ACA9"];
+
+const topStatuses = Object.entries(EMBEDDED_DATA.statusTotals).sort((a,b)=>b[1]-a[1]).map(e=>e[0]);
+const contractors = EMBEDDED_DATA.contractors;
+
+function fmt(n){ return (n||0).toLocaleString("en-US"); }
+function missingFor(name, total){ return Math.max((TARGETS[name] || 0) - total, 0); }
+
+function renderKPIs(){
+  const totalStars = contractors.reduce((a,c)=>a+c.total,0);
+  const totalTarget = contractors.reduce((a,c)=>a+(TARGETS[c.name]||0),0);
+  const totalMissing = contractors.reduce((a,c)=>a+missingFor(c.name, c.total),0);
+  const totalReactivate = contractors.reduce((a,c)=>a+(c.statusCounts["Reactivate"]||0),0);
+  const totalNewStar = contractors.reduce((a,c)=>a+(c.statusCounts["New Star"]||0),0);
+  const totalToday = Object.values(TODAY_ACQ).reduce((a,v)=>a+v,0);
+  const latestDateLabel = HUB_DAILY_DATES.length ? HUB_DAILY_DATES[HUB_DAILY_DATES.length-1].replace(/^(\w+)\s+(\d+)$/, "$2 $1") : "";
+  const kpis = [
+    { label:"Contractors", value: fmt(contractors.length), color:"var(--ink)" },
+    { label:`New ACQ – <span style="color:var(--c1)">${latestDateLabel}</span>`, value: fmt(totalToday), color:"var(--c1)" },
+    { label:"Total Stars", value: fmt(totalStars), color:"var(--ink)" },
+    { label:"New Star", value: fmt(totalNewStar), color:"var(--c1)" },
+    { label:"Reactivate", value: fmt(totalReactivate), color:"var(--c2)" },
+    { label:"Total Target", value: fmt(totalTarget), color:"var(--ink-soft)" },
+    { label:"Total Missing vs Target", value: fmt(totalMissing), color:"#DC2626" },
+  ];
+  document.getElementById("kpis").innerHTML = kpis.map(k => `
+    <div class="kpi" style="--kpi-color:${k.color}">
+      <div class="kpi-label">${k.label}</div>
+      <div class="kpi-value num">${k.value}</div>
+    </div>
+  `).join("");
+}
+
+let cardCharts = [];
+function renderGrid(){
+  cardCharts.forEach(ch => ch.destroy());
+  cardCharts = [];
+
+  const q = document.getElementById("searchInput").value.trim().toLowerCase();
+  const sortVal = document.getElementById("sortSelect").value;
+  let list = contractors.filter(c => c.name.toLowerCase().includes(q));
+  if(sortVal === "total-desc") list.sort((a,b)=>b.total-a.total);
+  else if(sortVal === "total-asc") list.sort((a,b)=>a.total-b.total);
+  else if(sortVal === "name-asc") list.sort((a,b)=>a.name.localeCompare(b.name));
+  else if(sortVal === "missing-desc") list.sort((a,b)=>missingFor(b.name,b.total)-missingFor(a.name,a.total));
+
+  const area = document.getElementById("mainArea");
+  if(list.length === 0){
+    area.innerHTML = `<div class="empty-state">No matching results</div>`;
+    return;
+  }
+
+  area.innerHTML = `<div class="grid">` + list.map((c, idx) => {
+    const hubItems = CONTRACTOR_HUBS[c.name] || [];
+    const target = TARGETS[c.name] || 0;
+    const missing = missingFor(c.name, c.total);
+    return `
+    <div class="card">
+      <div class="card-head">
+        <svg class="pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11z"/>
+          <circle cx="12" cy="10" r="2.5"/>
+        </svg>
+        <span class="hub-name">${c.name}</span>
+        <button class="expand-btn" data-expand="${c.name}" title="View larger / Copy as image" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/>
+            <path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/>
+          </svg>
+        </button>
+      </div>
+      <div class="headline">
+        <div class="value num">${fmt(c.total)}</div>
+        <div class="label">Total Stars</div>
+      </div>
+      <div class="stats">
+        ${topStatuses.map((st,i) => `
+          <div class="stat" style="--stat-bg:${STATUS_COLORS[i % STATUS_COLORS.length].bg}; --stat-color:${STATUS_COLORS[i % STATUS_COLORS.length].c}">
+            <div class="stat-value num">${fmt(c.statusCounts[st] || 0)}</div>
+            <div class="stat-label">${st}</div>
+          </div>
+        `).join("")}
+        <div class="stat" style="--stat-bg:var(--bg); --stat-color:var(--ink-soft)">
+          <div class="stat-value num">${fmt(target)}</div>
+          <div class="stat-label">Target</div>
+        </div>
+        <div class="stat" style="--stat-bg:#FEF2F2; --stat-color:#DC2626">
+          <div class="stat-value num">${fmt(missing)}</div>
+          <div class="stat-label">Missing</div>
+        </div>
+        <div class="stat" style="grid-column:1/-1; --stat-bg:var(--info-bg); --stat-color:var(--info)">
+          <div class="stat-value num">${fmt(TODAY_ACQ[c.name] || 0)}</div>
+          <div class="stat-label">New Stars Today</div>
+        </div>
+      </div>
+      ${hubItems.length ? `
+        <div class="branch-title">Stars distribution by hubs (${hubItems.length} hubs)</div>
+        <div class="pie-wrap">
+          <canvas id="card-pie-${idx}"></canvas>
+          <div class="legend">
+            ${hubItems.map((item, i) => `
+              <div class="legend-row">
+                <span class="legend-dot" style="background:${PIE_COLORS[i % PIE_COLORS.length]}"></span>
+                <span class="legend-name">${item.name}</span>
+                <span class="legend-val num">${fmt(item.count)}</span>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+      ` : ``}
+    </div>
+  `;
+  }).join("") + `</div>`;
+
+  list.forEach((c, idx) => {
+    const hubItems = CONTRACTOR_HUBS[c.name] || [];
+    if(hubItems.length === 0) return;
+    const ctx = document.getElementById(`card-pie-${idx}`);
+    const chart = new Chart(ctx, {
+      type: "pie",
+      data: {
+        labels: hubItems.map(i => i.name),
+        datasets: [{
+          data: hubItems.map(i => i.count),
+          backgroundColor: hubItems.map((_, i) => PIE_COLORS[i % PIE_COLORS.length]),
+          borderWidth: 1,
+          borderColor: "#ffffff"
+        }]
+      },
+      options: {
+        responsive: false,
+        plugins: {
+          legend: { display: false },
+          datalabels: { color: "#fff", font: { weight: "bold", size: 10 }, formatter: (value) => value },
+          tooltip: { callbacks: { label: (ctx) => `${ctx.label}: ${ctx.parsed}` } }
+        }
+      }
+    });
+    cardCharts.push(chart);
+  });
+
+  document.querySelectorAll(".expand-btn").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      openCardModal(btn.dataset.expand);
+    });
+  });
+}
+
+document.getElementById("searchInput").addEventListener("input", renderGrid);
+document.getElementById("sortSelect").addEventListener("change", renderGrid);
+
+document.getElementById("lastUpdated").textContent = new Date().toLocaleString("en-US", {
+  year:"numeric", month:"long", day:"numeric", hour:"2-digit", minute:"2-digit"
+});
+
+document.getElementById("sortSelect").value = "missing-desc";
+renderKPIs();
+renderGrid();
+</script>
+
+
+  </div>
+  <div class="app-content" id="page-map" style="display:none;">
+    <header>
+      <div class="title-block">
+        <h1 id="mapPageTitle">Contractors Map</h1>
+        <p id="mapPageSubtitle">Click a contractor to see the hubs they deployed stars in</p>
+      </div>
+      <div class="controls" id="mapSearchWrap">
+        <input type="text" id="mapSearchInput" placeholder="Search contractor name...">
+      </div>
+    </header>
+    <div class="map-wrap">
+      <div id="mapListView">
+        <div class="map-list" id="mapList"></div>
+      </div>
+      <div id="mapDetailView" style="display:none;">
+        <div style="display:flex; gap:8px; margin-bottom:14px;">
+          <div class="backBtn" id="mapBackBtn" style="margin-bottom:0;">&larr; Back to contractors</div>
+          <div class="backBtn" id="mapResetBtn" style="margin-bottom:0;">Reset view</div>
+        </div>
+        <div class="map-detail-flex">
+          <div class="map-area-panel" id="mapAreaPanel"></div>
+          <div class="contractor-map-box">
+            <svg id="contractorMapSvg" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg"></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="app-content" id="page-acq" style="display:none;">
+    <header>
+      <div class="title-block">
+        <h1>ACQ Trend</h1>
+        <p>Number of reps (مندوبين) per branch, across all contractors</p>
+      </div>
+      <div class="controls">
+        <input type="text" id="acqSearchInput" placeholder="Search branch name...">
+      </div>
+    </header>
+    <div class="acq-wrap">
+      <div class="acq-controls">
+        <button class="acq-sort-btn desc" id="acqSortBtn" type="button">
+          <span class="label">Highest to lowest</span>
+          <span class="arrow">&#8595;</span>
+        </button>
+      </div>
+      <div class="acq-list" id="acqList"></div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="hubDailyOverlay" style="display:none;">
+    <div class="modal-box" id="hubDailyBox" style="max-width:900px;">
+      <div class="modal-toolbar">
+        <button class="closeBtn" id="hubDailyCloseBtn" type="button">Close</button>
+      </div>
+      <div class="modal-capture" id="hubDailyCapture"></div>
+    </div>
+  </div>
+
+  <div class="app-content" id="page-forecasts" style="display:none;">
+    <header>
+      <div class="title-block">
+        <h1>Forecasts</h1>
+        <p>Weekly reps (Sat–Thu weeks), week-over-week growth, and next-week forecast</p>
+      </div>
+    </header>
+    <div class="fc-wrap">
+
+      <div id="fcBostaView">
+        <div class="fc-chart-card">
+          <div class="fc-chart-box"><canvas id="fcBostaChart"></canvas></div>
+        </div>
+        <div class="fc-stats" id="fcBostaStats"></div>
+      </div>
+
+      <div id="fcContractorView" style="display:none;">
+        <div class="fc-contractor-body">
+          <div class="fc-contractor-list-wrap">
+            <input type="text" id="fcContractorSearch" placeholder="Search contractor...">
+            <div class="fc-contractor-list" id="fcContractorList"></div>
+          </div>
+          <div class="fc-contractor-detail">
+            <div class="fc-chart-card">
+              <div class="fc-chart-box"><canvas id="fcContractorChart"></canvas></div>
+            </div>
+            <div class="fc-stats" id="fcContractorStats"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="cardModalOverlay" style="display:none;">
+  <div class="modal-box" id="cardModalBox">
+    <div class="modal-toolbar">
+      <button class="downloadBtn" id="modalDownloadBtn" type="button">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        <span class="downloadLabel">Download</span>
+      </button>
+      <button class="closeBtn" id="modalCloseBtn" type="button">Close</button>
+    </div>
+    <div class="modal-capture" id="modalCapture"></div>
+  </div>
+</div>
+<script>
+const HUB_COORDS = {"Helwan Hub": {"x": 253.2, "y": 98.9}, "Nasr City Hub": {"x": 253.6, "y": 89.2}, "Sohag Hub": {"x": 268.0, "y": 250.2}, "El Obour Hub": {"x": 258.8, "y": 82.8}, "Hadayk El Ahram Hub": {"x": 246.0, "y": 92.0}, "Heliopolis Hub": {"x": 252.8, "y": 87.9}, "Beni Suef Hub": {"x": 243.6, "y": 134.8}, "Madinaty Hub": {"x": 264.8, "y": 89.2}, "Maadi Hub": {"x": 250.0, "y": 93.8}, "Gesr Elsuez Hub": {"x": 252.8, "y": 86.9}, "Mokattam Hub": {"x": 251.6, "y": 91.1}, "Khorshid Hub": {"x": 194.8, "y": 39.1}, "Ismailia Hub": {"x": 290.8, "y": 64.4}, "Marg Hub": {"x": 252.8, "y": 86.0}, "Hadayk October": {"x": 237.6, "y": 94.8}, "Katamya-New Hub": {"x": 258.0, "y": 92.5}, "Imbaba Hub": {"x": 248.4, "y": 88.8}, "Port Said Hub": {"x": 291.2, "y": 34.0}, "Minya Hub": {"x": 230.0, "y": 178.9}, "Smouha Hub": {"x": 198.4, "y": 36.3}, "Downtown Hub": {"x": 249.6, "y": 89.7}, "Shobra Hub": {"x": 249.6, "y": 87.4}, "October Hub": {"x": 236.8, "y": 95.2}, "New October Hub": {"x": 236.0, "y": 93.8}, "Domiatta Hub": {"x": 272.4, "y": 26.7}, "Tanta Hub": {"x": 240.0, "y": 55.7}, "Haram Hub": {"x": 245.2, "y": 92.9}, "Mansoura-Talkha Hub": {"x": 255.2, "y": 44.2}, "Alexandria Hub": {"x": 196.8, "y": 36.8}, "New Cairo Hub": {"x": 258.8, "y": 90.6}, "Fayoum Hub": {"x": 233.6, "y": 123.7}, "Qena Hub": {"x": 308.8, "y": 268.6}, "Zahraa El Maadi Hub": {"x": 250.8, "y": 94.3}, "Zahraa Nasr City Hub": {"x": 254.2, "y": 89.9}, "Mohandseen Hub": {"x": 248.0, "y": 89.2}, "Faisal Hub": {"x": 246.4, "y": 93.4}, "El-Mansoura Hub": {"x": 255.2, "y": 44.2}, "Dikernis Hub": {"x": 263.6, "y": 42.3}, "El-Sharkia Hub": {"x": 260.0, "y": 64.9}, "Monufia Hub": {"x": 240.4, "y": 66.2}, "Huarghada Hub": {"x": 352.4, "y": 218.0}, "Luxor Hub": {"x": 305.6, "y": 290.3}, "Aswan Hub": {"x": 316.0, "y": 363.9}, "Kafrelsheikh Hub": {"x": 237.6, "y": 40.9}, "Shorouk Hub": {"x": 264.8, "y": 86.0}, "Hawamdya Hub": {"x": 250.0, "y": 98.0}, "Qalyoub Hub": {"x": 248.4, "y": 83.7}, "Behira Hub": {"x": 218.8, "y": 44.6}, "Matrouh Hub": {"x": 89.6, "y": 29.9}, "Sharm EL Sheikh Hub": {"x": 373.2, "y": 188.1}, "Suez Hub": {"x": 301.2, "y": 93.4}, "ElMahala Hub": {"x": 246.8, "y": 47.4}, "ElAgamy Hub": {"x": 191.6, "y": 40.0}, "Faqous Hub": {"x": 272.0, "y": 59.3}, "Assiut Hub": {"x": 247.2, "y": 221.7}, "Banha Hub": {"x": 247.2, "y": 70.8}};
+
+
+const AREA_HUBS = {
+  "Alex": ["ElAgamy Hub", "Matrouh Hub", "Behira Hub", "Khorshid Hub", "Alexandria Hub", "Smouha Hub"],
+  "Cairo": ["Katamya-New Hub", "Shorouk Hub", "Marg Hub", "Zahraa Nasr City Hub", "Nasr City Hub", "Mokattam Hub", "Heliopolis Hub", "Gesr Elsuez Hub", "Madinaty Hub", "Shobra Hub", "El Obour Hub", "Helwan Hub", "Maadi Hub", "Downtown Hub", "New Cairo Hub", "Zahraa El Maadi Hub"],
+  "Canal": ["Sharm EL Sheikh Hub", "Suez Hub", "Ismailia Hub"],
+  "Delta": ["El-Sharkia Hub", "ElMahala Hub", "Monufia Hub", "Banha Hub", "Faqous Hub", "Dikernis Hub", "Domiatta Hub", "El-Mansoura Hub", "Qalyoub Hub", "Tanta Hub", "Kafrelsheikh Hub", "Mansoura-Talkha Hub", "Port Said Hub"],
+  "Giza": ["Hadayk October", "New October Hub", "Faisal Hub", "October Hub", "Imbaba Hub", "Haram Hub", "Hadayk El Ahram Hub", "Hawamdya Hub", "Mohandseen Hub"],
+  "Upper": ["Huarghada Hub", "Qena Hub", "Aswan Hub", "Luxor Hub", "New Valley Hub", "Edfo Hub", "Minya Hub", "Assiut Hub", "Fayoum Hub", "Sohag Hub", "Beni Suef Hub"]
+};
+
+const HUB_TO_AREA = {};
+Object.entries(AREA_HUBS).forEach(([area, hubs]) => hubs.forEach(h => { HUB_TO_AREA[h] = area; }));
+
+// Schematic (not-to-exact-scale) anchor points so each area's hubs cluster tightly
+// under a big, distinctly colored area label instead of spreading across the map.
+const AREA_ANCHORS = {
+  "Alex":  { x: 180, y: 90,  color: "#D97706" },
+  "Delta": { x: 560, y: 70,  color: "#16A34A" },
+  "Canal": { x: 950, y: 160, color: "#0891B2" },
+  "Cairo": { x: 560, y: 380, color: "#2563EB" },
+  "Giza":  { x: 150, y: 380, color: "#7C3AED" },
+  "Upper": { x: 560, y: 680, color: "#DC2626" }
+};
+
+function renderMap(){
+  const q = document.getElementById("mapSearchInput").value.trim().toLowerCase();
+  const names = contractors.map(c => c.name).filter(n => n.toLowerCase().includes(q)).sort((a,b)=>a.localeCompare(b));
+  const listEl = document.getElementById("mapList");
+  if(names.length === 0){
+    listEl.innerHTML = `<div class="empty-state">No matching results</div>`;
+    return;
+  }
+  listEl.innerHTML = names.map(n => `
+    <div class="map-item" data-contractor="${n}">
+      <svg class="pin2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11z"/>
+        <circle cx="12" cy="10" r="2.5"/>
+      </svg>
+      ${n}
+    </div>
+  `).join("");
+  document.querySelectorAll(".map-item").forEach(el => {
+    el.addEventListener("click", () => openContractorMap(el.dataset.contractor));
+  });
+}
+
+function openContractorMap(contractorName){
+  const hubItems = CONTRACTOR_HUBS[contractorName] || [];
+  document.getElementById("mapPageTitle").textContent = contractorName;
+  document.getElementById("mapPageSubtitle").textContent =
+    hubItems.length ? `Hubs where ${contractorName} has deployed stars` : "No hub data for this contractor";
+  document.getElementById("mapListView").style.display = "none";
+  document.getElementById("mapDetailView").style.display = "";
+
+  // Build a lookup of hub -> count for this contractor (only hubs with actual reps deployed)
+  const hubCountMap = {};
+  hubItems.forEach(item => { hubCountMap[item.name] = item.count; });
+  const contractorTotal = hubItems.reduce((a, item) => a + item.count, 0);
+
+  const areaPanel = document.getElementById("mapAreaPanel");
+  const areaGroupsHtml = Object.entries(AREA_HUBS).map(([area, hubs]) => {
+    const activeHubs = hubs
+      .filter(h => hubCountMap[h] > 0)
+      .sort((a, b) => hubCountMap[b] - hubCountMap[a]);
+    if(activeHubs.length === 0) return "";
+    const areaTotal = activeHubs.reduce((a, h) => a + hubCountMap[h], 0);
+    const areaPct = contractorTotal > 0 ? ((areaTotal / contractorTotal) * 100).toFixed(0) : 0;
+    return `
+      <div class="map-area-group">
+        <span class="map-area-title">${area} <span class="map-area-pct">${areaPct}%</span></span>
+        ${activeHubs.map(h => `
+          <div class="map-area-hub">
+            <span class="hname">${h}</span>
+            <span class="hcount num">${fmt(hubCountMap[h])}</span>
+          </div>
+        `).join("")}
+      </div>
+    `;
+  }).join("");
+  areaPanel.innerHTML = areaGroupsHtml || `<div class="map-area-empty">No hub data for this contractor</div>`;
+
+  // Group active hubs by area, and lay each area's hubs out in a small tight
+  // grid clustered under a big, distinctly colored area label.
+  const activeByArea = {};
+  hubItems.forEach(item => {
+    const area = HUB_TO_AREA[item.name] || "Other";
+    if(!activeByArea[area]) activeByArea[area] = [];
+    activeByArea[area].push(item);
+  });
+
+  // 1) Build each area's cluster shape independently of its anchor position
+  //    (local coords relative to the area's own anchor at 0,0).
+  const clusters = Object.entries(activeByArea).map(([area, items]) => {
+    items.sort((a, b) => b.count - a.count);
+    const maxLabelLen = Math.max(...items.map(it => `${it.name}: ${it.count}`.length));
+    const dx = Math.max(120, maxLabelLen * 6.4 + 24);
+    const dy = 46;
+    const cols = items.length <= 2 ? items.length : (items.length <= 6 ? 2 : 3);
+    const rows = Math.ceil(items.length / cols);
+    const gridW = (cols - 1) * dx;
+    const localPts = items.map((item, i) => {
+      const col = i % cols, row = Math.floor(i / cols);
+      return { ...item, local: { x: -gridW/2 + col*dx, y: 42 + row*dy } };
+    });
+    const halfLabelW = Math.max(gridW/2, area.length * 8) + 20;
+    return {
+      area,
+      localPts,
+      // bounding box in local space (anchor at 0,0), label sits at y≈0
+      bbox: { minX: -halfLabelW, maxX: halfLabelW, minY: -30, maxY: 42 + rows*dy - dy + 28 },
+      anchor: { ...(AREA_ANCHORS[area] || { x: 250, y: 200, color: "#374151" }) }
+    };
+  });
+
+  // 2) Resolve overlaps between area clusters by nudging anchors apart
+  //    (simple iterative AABB separation), so no area's hubs ever collide
+  //    with another area's, regardless of how many hubs each has.
+  const MARGIN = 50;
+  for(let iter = 0; iter < 60; iter++){
+    let anyOverlap = false;
+    for(let i = 0; i < clusters.length; i++){
+      for(let j = 0; j < i; j++){
+        const A = clusters[i], B = clusters[j];
+        const aBox = { minX: A.anchor.x + A.bbox.minX, maxX: A.anchor.x + A.bbox.maxX, minY: A.anchor.y + A.bbox.minY, maxY: A.anchor.y + A.bbox.maxY };
+        const bBox = { minX: B.anchor.x + B.bbox.minX, maxX: B.anchor.x + B.bbox.maxX, minY: B.anchor.y + B.bbox.minY, maxY: B.anchor.y + B.bbox.maxY };
+        const overlapX = Math.min(aBox.maxX, bBox.maxX) - Math.max(aBox.minX, bBox.minX) + MARGIN;
+        const overlapY = Math.min(aBox.maxY, bBox.maxY) - Math.max(aBox.minY, bBox.minY) + MARGIN;
+        if(overlapX > 0 && overlapY > 0){
+          anyOverlap = true;
+          const dirX = (A.anchor.x - B.anchor.x) || (i - j);
+          const dirY = (A.anchor.y - B.anchor.y) || 1;
+          if(overlapX < overlapY){
+            const push = overlapX / 2 * Math.sign(dirX || 1);
+            A.anchor.x += push; B.anchor.x -= push;
+          } else {
+            const push = overlapY / 2 * Math.sign(dirY || 1);
+            A.anchor.y += push; B.anchor.y -= push;
+          }
+        }
+      }
+    }
+    if(!anyOverlap) break;
+  }
+
+  // 3) Convert resolved local coordinates into final absolute points
+  const pts = [];
+  const areaLabels = [];
+  clusters.forEach(c => {
+    c.localPts.forEach(p => pts.push({ ...p, coord: { x: c.anchor.x + p.local.x, y: c.anchor.y + p.local.y } }));
+    areaLabels.push({ area: c.area, x: c.anchor.x, y: c.anchor.y, color: c.anchor.color });
+  });
+
+  if(pts.length === 0){
+    document.getElementById("contractorMapSvg").innerHTML =
+      `<text x="200" y="150" text-anchor="middle" font-size="13" fill="#6B7280">No mapped hubs for this contractor</text>`;
+    return;
+  }
+
+  const xs = pts.map(p => p.coord.x), ys = pts.map(p => p.coord.y);
+  let minX = Math.min(...xs) - 60, maxX = Math.max(...xs) + 60;
+  let minY = Math.min(...ys, ...areaLabels.map(a => a.y)) - 60, maxY = Math.max(...ys) + 50;
+
+  const MIN_W = 1200, MIN_H = 850;
+  if(maxX - minX < MIN_W){
+    const cx = (minX + maxX) / 2;
+    minX = cx - MIN_W/2; maxX = cx + MIN_W/2;
+  }
+  if(maxY - minY < MIN_H){
+    const cy = (minY + maxY) / 2;
+    minY = cy - MIN_H/2; maxY = cy + MIN_H/2;
+  }
+
+  const svg = document.getElementById("contractorMapSvg");
+  svg.setAttribute("viewBox", `${minX} ${minY} ${maxX - minX} ${maxY - minY}`);
+  currentViewBox = { x: minX, y: minY, w: maxX - minX, h: maxY - minY };
+  baseViewBox = { ...currentViewBox };
+
+  const w = maxX - minX, h = maxY - minY;
+
+  // Realistic-style map background, drawn in the SAME coordinate space as the pins
+  // so panning/zooming moves the whole map together, not just the markers.
+  let bg = `<rect x="${minX}" y="${minY}" width="${w}" height="${h}" fill="#F1EFE9"/>`;
+
+  // land-use blocks (sand/beige city blocks like a real street map)
+  const rng = (seed) => { let s = seed; return () => { s = (s*9301+49297)%233280; return s/233280; }; };
+  const rand = rng(42);
+  for(let i = 0; i < 26; i++){
+    const bx = minX + rand()*w, by = minY + rand()*h;
+    const bw = 18 + rand()*36, bh = 14 + rand()*28;
+    bg += `<rect x="${bx}" y="${by}" width="${bw}" height="${bh}" fill="#EAE7DE" rx="2"/>`;
+  }
+
+  // parks
+  bg += `<rect x="${minX + w*0.06}" y="${minY + h*0.60}" width="${w*0.20}" height="${h*0.20}" fill="#CFE3C7" rx="8"/>`;
+  bg += `<rect x="${minX + w*0.72}" y="${minY + h*0.10}" width="${w*0.18}" height="${h*0.14}" fill="#CFE3C7" rx="8"/>`;
+  // water
+  bg += `<path d="M${minX} ${minY + h*0.88} Q ${minX + w*0.3} ${minY + h*0.80} ${minX + w*0.55} ${minY + h*0.92} T ${minX + w} ${minY + h*0.84} L ${minX + w} ${minY + h} L ${minX} ${minY + h} Z" fill="#C3D9EA"/>`;
+
+  // minor streets grid
+  for(let i = 0; i < 12; i++){
+    const gx = minX + (i+1) * w/13;
+    bg += `<line x1="${gx}" y1="${minY}" x2="${gx}" y2="${maxY}" stroke="#DCD8CD" stroke-width="1.4"/>`;
+  }
+  for(let i = 0; i < 9; i++){
+    const gy = minY + (i+1) * h/10;
+    bg += `<line x1="${minX}" y1="${gy}" x2="${maxX}" y2="${gy}" stroke="#DCD8CD" stroke-width="1.4"/>`;
+  }
+  // main roads (white with gray casing, classic map style)
+  bg += `<line x1="${minX}" y1="${minY + h*0.45}" x2="${maxX}" y2="${minY + h*0.40}" stroke="#C7C2B4" stroke-width="7"/>`;
+  bg += `<line x1="${minX}" y1="${minY + h*0.45}" x2="${maxX}" y2="${minY + h*0.40}" stroke="#FFFFFF" stroke-width="4"/>`;
+  bg += `<line x1="${minX + w*0.32}" y1="${minY}" x2="${minX + w*0.48}" y2="${maxY}" stroke="#C7C2B4" stroke-width="6"/>`;
+  bg += `<line x1="${minX + w*0.32}" y1="${minY}" x2="${minX + w*0.48}" y2="${maxY}" stroke="#FFFFFF" stroke-width="3.5"/>`;
+  bg += `<line x1="${minX}" y1="${minY + h*0.7}" x2="${maxX}" y2="${minY + h*0.75}" stroke="#C7C2B4" stroke-width="5"/>`;
+  bg += `<line x1="${minX}" y1="${minY + h*0.7}" x2="${maxX}" y2="${minY + h*0.75}" stroke="#FFFFFF" stroke-width="3"/>`;
+
+  let content = bg;
+
+  // Big, distinctly colored area name behind/above each hub cluster
+  areaLabels.forEach(a => {
+    content += `
+      <text x="${a.x}" y="${a.y}" text-anchor="middle"
+        font-size="22" font-weight="900" fill="${a.color}"
+        style="text-transform:uppercase; letter-spacing:1px; paint-order:stroke;"
+        stroke="#fff" stroke-width="4">${a.area}</text>
+      <text x="${a.x}" y="${a.y}" text-anchor="middle"
+        font-size="22" font-weight="900" fill="${a.color}"
+        style="text-transform:uppercase; letter-spacing:1px;">${a.area}</text>
+    `;
+  });
+
+  pts.forEach(p => {
+    const label = `${p.name}: ${p.count}`;
+    const labelW = label.length * 4.6 + 14;
+    const cx = p.coord.x, cy = p.coord.y;
+    content += `
+      <g class="map-label-box">
+        <rect x="${cx - labelW/2}" y="${cy - 24}" width="${labelW}" height="14" rx="7" ry="7"></rect>
+        <text x="${cx}" y="${cy - 14.5}" text-anchor="middle">${label}</text>
+      </g>
+      <g class="map-pin" transform="translate(${cx - 4.5}, ${cy - 10}) scale(0.4)">
+        <path d="M9 22s-7-9.6-7-15.5C2 2.9 5.13 0 9 0s7 2.9 7 6.5C16 12.4 9 22 9 22z"></path>
+        <circle cx="9" cy="6.5" r="2.6"></circle>
+      </g>
+    `;
+  });
+  svg.innerHTML = content;
+}
+
+document.getElementById("mapBackBtn").addEventListener("click", () => {
+  document.getElementById("mapPageTitle").textContent = "Contractors Map";
+  document.getElementById("mapPageSubtitle").textContent = "Click a contractor to see the hubs they deployed stars in";
+  document.getElementById("mapDetailView").style.display = "none";
+  document.getElementById("mapListView").style.display = "";
+});
+document.getElementById("mapSearchInput").addEventListener("input", renderMap);
+
+// --- Pan & zoom for the contractor map ---
+let currentViewBox = { x: 0, y: 0, w: 400, h: 300 };
+let baseViewBox = { x: 0, y: 0, w: 400, h: 300 };
+let isPanning = false;
+let panStart = { x: 0, y: 0 };
+let panOrigin = { x: 0, y: 0 };
+
+function applyViewBox(){
+  const svg = document.getElementById("contractorMapSvg");
+  svg.setAttribute("viewBox", `${currentViewBox.x} ${currentViewBox.y} ${currentViewBox.w} ${currentViewBox.h}`);
+}
+
+function clientToSvgScale(svg){
+  const rect = svg.getBoundingClientRect();
+  return { sx: currentViewBox.w / rect.width, sy: currentViewBox.h / rect.height, rect };
+}
+
+function zoomAt(svg, clientX, clientY, factor){
+  const { sx, sy, rect } = clientToSvgScale(svg);
+  const mx = currentViewBox.x + (clientX - rect.left) * sx;
+  const my = currentViewBox.y + (clientY - rect.top) * sy;
+  const newW = Math.min(baseViewBox.w * 4, Math.max(baseViewBox.w * 0.25, currentViewBox.w * factor));
+  const newH = Math.min(baseViewBox.h * 4, Math.max(baseViewBox.h * 0.25, currentViewBox.h * factor));
+  currentViewBox.x = mx - (mx - currentViewBox.x) * (newW / currentViewBox.w);
+  currentViewBox.y = my - (my - currentViewBox.y) * (newH / currentViewBox.h);
+  currentViewBox.w = newW;
+  currentViewBox.h = newH;
+  applyViewBox();
+}
+
+(function initMapInteractions(){
+  const svg = document.getElementById("contractorMapSvg");
+
+  svg.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    const factor = e.deltaY > 0 ? 1.15 : 0.87;
+    zoomAt(svg, e.clientX, e.clientY, factor);
+  }, { passive: false });
+
+  svg.addEventListener("mousedown", (e) => {
+    isPanning = true;
+    panStart = { x: e.clientX, y: e.clientY };
+    panOrigin = { x: currentViewBox.x, y: currentViewBox.y };
+    svg.style.cursor = "grabbing";
+  });
+  window.addEventListener("mousemove", (e) => {
+    if(!isPanning) return;
+    const { sx, sy } = clientToSvgScale(svg);
+    currentViewBox.x = panOrigin.x - (e.clientX - panStart.x) * sx;
+    currentViewBox.y = panOrigin.y - (e.clientY - panStart.y) * sy;
+    applyViewBox();
+  });
+  window.addEventListener("mouseup", () => { isPanning = false; svg.style.cursor = "grab"; });
+
+  let lastTouchDist = null;
+  svg.addEventListener("touchstart", (e) => {
+    if(e.touches.length === 1){
+      isPanning = true;
+      panStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      panOrigin = { x: currentViewBox.x, y: currentViewBox.y };
+    } else if(e.touches.length === 2){
+      isPanning = false;
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      lastTouchDist = Math.sqrt(dx*dx + dy*dy);
+    }
+  }, { passive: true });
+  svg.addEventListener("touchmove", (e) => {
+    if(e.touches.length === 1 && isPanning){
+      const { sx, sy } = clientToSvgScale(svg);
+      currentViewBox.x = panOrigin.x - (e.touches[0].clientX - panStart.x) * sx;
+      currentViewBox.y = panOrigin.y - (e.touches[0].clientY - panStart.y) * sy;
+      applyViewBox();
+    } else if(e.touches.length === 2 && lastTouchDist){
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      const factor = lastTouchDist / dist;
+      const cx = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+      const cy = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+      zoomAt(svg, cx, cy, factor);
+      lastTouchDist = dist;
+    }
+  }, { passive: true });
+  svg.addEventListener("touchend", () => { isPanning = false; lastTouchDist = null; });
+
+  svg.style.cursor = "grab";
+  svg.style.touchAction = "none";
+})();
+
+document.getElementById("mapResetBtn").addEventListener("click", () => {
+  currentViewBox = { ...baseViewBox };
+  applyViewBox();
+});
+
+// --- ACQ Trend: reps per branch, aggregated across all contractors ---
+const OWNED_FLEET_NAME = "Owned Fleet – LM";
+const BRANCH_TOTALS = (() => {
+  const totals = {};
+  const ownedFleet = {};
+  Object.entries(CONTRACTOR_HUBS).forEach(([contractor, hubList]) => {
+    hubList.forEach(({ name, count }) => {
+      totals[name] = (totals[name] || 0) + count;
+      if(contractor === OWNED_FLEET_NAME){
+        ownedFleet[name] = (ownedFleet[name] || 0) + count;
+      }
+    });
+  });
+  return Object.entries(totals).map(([name, count]) => ({
+    name, count,
+    ownedFleet: ownedFleet[name] || 0,
+    regular: count - (ownedFleet[name] || 0)
+  }));
+})();
+
+let acqSortDir = "desc";
+function renderAcqList(){
+  const q = document.getElementById("acqSearchInput").value.trim().toLowerCase();
+  const filtered = BRANCH_TOTALS.filter(b => b.name.toLowerCase().includes(q));
+  const sorted = [...filtered].sort((a, b) =>
+    acqSortDir === "desc" ? b.count - a.count : a.count - b.count
+  );
+  const maxCount = Math.max(...BRANCH_TOTALS.map(b => b.count), 1);
+  const listEl = document.getElementById("acqList");
+  if(sorted.length === 0){
+    listEl.innerHTML = `<div class="empty-state">No matching results</div>`;
+    return;
+  }
+  listEl.innerHTML = sorted.map(b => `
+    <div class="acq-row">
+      <button class="acq-expand-btn" data-hub="${b.name}" title="View daily breakdown" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/>
+          <path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/>
+        </svg>
+      </button>
+      <div class="acq-branch">
+        <svg class="pin2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11z"/>
+          <circle cx="12" cy="10" r="2.5"/>
+        </svg>
+        <span class="name">${b.name}</span>
+      </div>
+      <div class="acq-count">
+        <span class="val num">${fmt(b.count)}</span>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:${(b.count / maxCount * 100).toFixed(0)}%"></div>
+        </div>
+        ${b.ownedFleet > 0 ? `
+          <div class="acq-split">
+            <span class="acq-split-item"><span class="dot regular"></span>${fmt(b.regular)} Contractor</span>
+            <span class="acq-split-item"><span class="dot owned"></span>${fmt(b.ownedFleet)} ${OWNED_FLEET_NAME}</span>
+          </div>
+        ` : ``}
+      </div>
+    </div>
+  `).join("");
+
+  document.querySelectorAll(".acq-expand-btn").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      openHubDailyModal(btn.dataset.hub);
+    });
+  });
+}
+
+document.getElementById("acqSortBtn").addEventListener("click", () => {
+  acqSortDir = acqSortDir === "desc" ? "asc" : "desc";
+  const btn = document.getElementById("acqSortBtn");
+  btn.classList.toggle("asc", acqSortDir === "asc");
+  btn.classList.toggle("desc", acqSortDir === "desc");
+  btn.querySelector(".label").textContent = acqSortDir === "desc" ? "Highest to lowest" : "Lowest to highest";
+  renderAcqList();
+});
+document.getElementById("acqSearchInput").addEventListener("input", renderAcqList);
+
+function showPage(pageId){
+  ["page-dashboard", "page-map", "page-acq", "page-forecasts"].forEach(id => {
+    document.getElementById(id).style.display = id === pageId ? "" : "none";
+  });
+  document.getElementById("navDashboard").classList.toggle("active", pageId === "page-dashboard");
+  document.getElementById("navMap").classList.toggle("active", pageId === "page-map");
+  document.getElementById("navAcq").classList.toggle("active", pageId === "page-acq");
+  document.getElementById("navForecasts").classList.toggle("active", pageId === "page-forecasts");
+}
+
+function showForecastSubView(view){
+  document.getElementById("navForecastsBosta").classList.toggle("active", view === "bosta");
+  document.getElementById("navForecastsContractor").classList.toggle("active", view === "contractor");
+  document.getElementById("fcBostaView").style.display = view === "bosta" ? "" : "none";
+  document.getElementById("fcContractorView").style.display = view === "contractor" ? "" : "none";
+  if(view === "bosta"){
+    renderBostaForecast();
+  } else {
+    renderContractorList();
+    renderContractorDetail();
+  }
+}
+
+function toggleForecastsMenu(forceOpen){
+  const group = document.getElementById("forecastsSubGroup");
+  const isOpen = group.style.display !== "none";
+  const nextOpen = forceOpen !== undefined ? forceOpen : !isOpen;
+  group.style.display = nextOpen ? "" : "none";
+  document.getElementById("forecastsArrow").classList.toggle("open", nextOpen);
+  return nextOpen;
+}
+
+  document.getElementById("navDashboard").addEventListener("click", () => showPage("page-dashboard"));
+  document.getElementById("navMap").addEventListener("click", () => { showPage("page-map"); renderMap(); });
+  document.getElementById("navAcq").addEventListener("click", () => { showPage("page-acq"); renderAcqList(); });
+  document.getElementById("navForecasts").addEventListener("click", () => {
+    const nowOpen = toggleForecastsMenu();
+    if(nowOpen){
+      showPage("page-forecasts"); initForecasts(); showForecastSubView("bosta");
+    }
+  });
+  document.getElementById("navForecastsBosta").addEventListener("click", () => {
+    toggleForecastsMenu(true);
+    showPage("page-forecasts"); initForecasts(); showForecastSubView("bosta");
+  });
+  document.getElementById("navForecastsContractor").addEventListener("click", () => {
+    toggleForecastsMenu(true);
+    showPage("page-forecasts"); initForecasts(); showForecastSubView("contractor");
+  });
+
+// --- Forecasts: weekly totals, growth %, next-week projection ---
+// METHOD: least-squares linear regression across the 3 completed weeks' daily
+// rates (week index -> reps/day), which weighs all 3 real weeks fairly instead
+// of just the last jump, and is far less prone to runaway numbers than
+// compounding a single growth % repeatedly. We also report an estimated range
+// (not a rigorous statistical CI — 3 data points is too few for that — but a
+// residual-based band that widens the further out we project) so the forecast
+// reads as an estimate, not a guaranteed number.
+function computeWeeklySeries(counts){
+  const w1 = counts[1] || 0, w2 = counts[2] || 0, w3 = counts[3] || 0;
+  const d1 = WEEK_DEFS[0].days, d2 = WEEK_DEFS[1].days, d3 = WEEK_DEFS[2].days;
+  const r1 = w1 / d1, r2 = w2 / d2, r3 = w3 / d3;
+
+  // % growth shown for context only
+  const g1 = r1 > 0 ? (r2 - r1) / r1 : null;
+  const g2 = r2 > 0 ? (r3 - r2) / r2 : null;
+
+  // Least-squares fit: daily rate as a function of week index (1,2,3)
+  const xs = [1, 2, 3], ys = [r1, r2, r3];
+  const n = 3;
+  const sumX = xs.reduce((a,b)=>a+b,0), sumY = ys.reduce((a,b)=>a+b,0);
+  const sumXY = xs.reduce((a,x,i)=>a + x*ys[i], 0);
+  const sumXX = xs.reduce((a,x)=>a + x*x, 0);
+  const denom = n*sumXX - sumX*sumX;
+  const slope = denom !== 0 ? (n*sumXY - sumX*sumY) / denom : 0;
+  const intercept = (sumY - slope*sumX) / n;
+
+  const rate4 = Math.max(0, intercept + slope*4);
+  const rate5 = Math.max(0, intercept + slope*5);
+  const forecastTotal = Math.round(rate4 * WEEK_DEFS[3].days);
+  const forecastTotal5 = Math.round(rate5 * WEEK_DEFS[4].days);
+
+  // Residual-based uncertainty band (widens further into the future)
+  const fitted = xs.map(x => intercept + slope*x);
+  const residualStd = Math.sqrt(ys.reduce((a,y,i)=>a + Math.pow(y-fitted[i],2), 0) / n);
+  const band4 = Math.max(residualStd * 1.5, rate4 * 0.20);
+  const band5 = Math.max(residualStd * 2.0, rate5 * 0.30);
+  const forecastLow4 = Math.max(0, Math.round((rate4 - band4) * WEEK_DEFS[3].days));
+  const forecastHigh4 = Math.round((rate4 + band4) * WEEK_DEFS[3].days);
+  const forecastLow5 = Math.max(0, Math.round((rate5 - band5) * WEEK_DEFS[4].days));
+  const forecastHigh5 = Math.round((rate5 + band5) * WEEK_DEFS[4].days);
+
+  const growth4 = r3 > 0 ? (rate4 - r3) / r3 : (rate4 > 0 ? null : 0);
+  const growth5 = rate4 > 0 ? (rate5 - rate4) / rate4 : (rate5 > 0 ? null : 0);
+
+  return {
+    w1, w2, w3, g1, g2, forecastTotal, forecastTotal5, growth4, growth5,
+    forecastLow4, forecastHigh4, forecastLow5, forecastHigh5
+  };
+}
+
+function pct(x){
+  if(x === null || !isFinite(x)) return "—";
+  return (x >= 0 ? "+" : "") + (x * 100).toFixed(0) + "%";
+}
+function pctClass(x){
+  if(x === null || !isFinite(x)) return "";
+  return x >= 0 ? "pos" : "neg";
+}
+
+let fcBostaChartInstance = null;
+let fcContractorChartInstance = null;
+
+function drawWeeklyChart(canvasId, series, existingChart){
+  if(existingChart){ existingChart.destroy(); }
+  const ctx = document.getElementById(canvasId);
+  const values = [series.w1, series.w2, series.w3, series.forecastTotal, series.forecastTotal5];
+  const pointColors = ["#93C5FD", "#3B82F6", "#1D4ED8", "#F59E0B", "#FB923C"];
+  const maxVal = Math.max(...values, 1);
+  const chart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: WEEK_DEFS.map(w => `${w.label}\n${w.range}`),
+      datasets: [{
+        data: values,
+        borderColor: "#3B82F6",
+        backgroundColor: "rgba(59,130,246,0.12)",
+        pointBackgroundColor: pointColors,
+        pointBorderColor: "#fff",
+        pointRadius: 6,
+        pointHoverRadius: 8,
+        borderWidth: 3,
+        tension: 0.3,
+        fill: true,
+        clip: false,
+        segment: {
+          borderDash: ctx2 => ctx2.p1DataIndex >= 3 ? [6, 5] : undefined,
+          borderColor: ctx2 => ctx2.p1DataIndex >= 3 ? "#F59E0B" : "#3B82F6"
+        }
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      layout: { padding: { top: 28 } },
+      plugins: {
+        legend: { display: false },
+        datalabels: {
+          align: "top", offset: 8, font: { weight: "bold", size: 12 }, clip: false,
+          formatter: (v, ctx) => ctx.dataIndex >= 3 ? `~${v} (forecast)` : v
+        },
+        tooltip: { enabled: true }
+      },
+      scales: {
+        y: { beginAtZero: true, suggestedMax: Math.ceil(maxVal * 1.25), grid: { color: "#EEE" } },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+  // Guard against the canvas collapsing when the page/tab was hidden during creation
+  requestAnimationFrame(() => chart.resize());
+  return chart;
+}
+
+function renderStatsRow(container, series){
+  container.innerHTML = `
+    <div class="fc-stat">
+      <div class="fc-val num">${fmt(series.w1)}</div>
+      <div class="fc-lbl">Week 1 total</div>
+    </div>
+    <div class="fc-stat">
+      <div class="fc-val num ${pctClass(series.g1)}">${pct(series.g1)}</div>
+      <div class="fc-lbl">Week 1 → Week 2 growth</div>
+    </div>
+    <div class="fc-stat">
+      <div class="fc-val num">${fmt(series.w3)}</div>
+      <div class="fc-lbl">Week 3 total</div>
+    </div>
+    <div class="fc-stat">
+      <div class="fc-val num ${pctClass(series.growth4)}">~${fmt(series.forecastTotal)}</div>
+      <div class="fc-lbl">Week 4 forecast (${fmt(series.forecastLow4)}–${fmt(series.forecastHigh4)})</div>
+    </div>
+    <div class="fc-stat">
+      <div class="fc-val num ${pctClass(series.growth5)}">~${fmt(series.forecastTotal5)}</div>
+      <div class="fc-lbl">Week 5 forecast (${fmt(series.forecastLow5)}–${fmt(series.forecastHigh5)})</div>
+    </div>
+  `;
+}
+
+function renderBostaForecast(){
+  const series = computeWeeklySeries(WEEK_TOTALS);
+  fcBostaChartInstance = drawWeeklyChart("fcBostaChart", series, fcBostaChartInstance);
+  renderStatsRow(document.getElementById("fcBostaStats"), series);
+}
+
+let fcSelectedContractor = null;
+function renderContractorList(){
+  const q = document.getElementById("fcContractorSearch").value.trim().toLowerCase();
+  const names = Object.keys(WEEK_BY_CONTRACTOR)
+    .filter(n => n.toLowerCase().includes(q))
+    .map(n => ({ name: n, series: computeWeeklySeries(WEEK_BY_CONTRACTOR[n]) }))
+    .sort((a,b) => b.series.forecastTotal - a.series.forecastTotal);
+
+  if(!fcSelectedContractor || !names.find(x => x.name === fcSelectedContractor)){
+    fcSelectedContractor = names.length ? names[0].name : null;
+  }
+
+  document.getElementById("fcContractorList").innerHTML = names.map(({name, series}) => `
+    <div class="fc-contractor-row ${name === fcSelectedContractor ? 'active' : ''}" data-name="${name}">
+      <span>${name}</span>
+      <span class="fc-trend ${pctClass(series.growth4)}">${pct(series.growth4)}</span>
+    </div>
+  `).join("") || `<div class="empty-state">No matching results</div>`;
+
+  document.querySelectorAll(".fc-contractor-row").forEach(row => {
+    row.addEventListener("click", () => {
+      fcSelectedContractor = row.dataset.name;
+      renderContractorList();
+      renderContractorDetail();
+    });
+  });
+}
+
+function renderContractorDetail(){
+  if(!fcSelectedContractor) return;
+  const series = computeWeeklySeries(WEEK_BY_CONTRACTOR[fcSelectedContractor] || {});
+  fcContractorChartInstance = drawWeeklyChart("fcContractorChart", series, fcContractorChartInstance);
+  renderStatsRow(document.getElementById("fcContractorStats"), series);
+}
+
+let forecastsInited = false;
+function initForecasts(){
+  if(!forecastsInited){
+    document.getElementById("fcContractorSearch").addEventListener("input", renderContractorList);
+    forecastsInited = true;
+  }
+}
+
+
+// --- Large view modal + copy-as-image ---
+let modalChart = null;
+// --- ACQ Trend: per-hub daily breakdown modal ---
+let hubDailyChartInstance = null;
+function openHubDailyModal(hubName){
+  const daily = HUB_DAILY[hubName] || {};
+  const newStarValues = HUB_DAILY_DATES.map(d => (daily[d] && daily[d]["New Star"]) || 0);
+  const reactivateValues = HUB_DAILY_DATES.map(d => (daily[d] && daily[d]["Reactivate"]) || 0);
+  const totalValues = HUB_DAILY_DATES.map((d, i) => newStarValues[i] + reactivateValues[i]);
+  const total = totalValues.reduce((a,v) => a+v, 0);
+
+  document.getElementById("hubDailyCapture").innerHTML = `
+    <div class="modal-head">
+      <svg class="pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11z"/>
+        <circle cx="12" cy="10" r="2.5"/>
+      </svg>
+      <span class="name">${hubName}</span>
+    </div>
+    <div class="modal-headline" style="margin-bottom:18px;">
+      <div class="value num">${fmt(total)}</div>
+      <div class="label">Total reps (${HUB_DAILY_DATES[0]} – ${HUB_DAILY_DATES[HUB_DAILY_DATES.length-1]})</div>
+    </div>
+    <div class="hub-daily-legend">
+      <span class="legend-chip"><span class="dot" style="background:#3B82F6"></span>New Star</span>
+      <span class="legend-chip"><span class="dot" style="background:#F59E0B"></span>Reactivate</span>
+    </div>
+    <div class="fc-chart-card" style="margin-bottom:0;">
+      <div class="fc-chart-box" style="height:280px;"><canvas id="hubDailyChart"></canvas></div>
+    </div>
+  `;
+
+  if(hubDailyChartInstance){ hubDailyChartInstance.destroy(); hubDailyChartInstance = null; }
+  const ctx = document.getElementById("hubDailyChart");
+  hubDailyChartInstance = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: HUB_DAILY_DATES,
+      datasets: [
+        {
+          label: "New Star",
+          data: newStarValues,
+          backgroundColor: "#3B82F6",
+          borderRadius: { topLeft: 0, topRight: 0, bottomLeft: 5, bottomRight: 5 },
+          maxBarThickness: 34,
+          stack: "reps"
+        },
+        {
+          label: "Reactivate",
+          data: reactivateValues,
+          backgroundColor: "#F59E0B",
+          borderRadius: { topLeft: 5, topRight: 5, bottomLeft: 0, bottomRight: 0 },
+          maxBarThickness: 34,
+          stack: "reps"
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      layout: { padding: { top: 24 } },
+      plugins: {
+        legend: { display: false },
+        datalabels: {
+          display: (ctx2) => ctx2.dataset.data[ctx2.dataIndex] > 0,
+          color: "#fff", font: { weight: "bold", size: 10 },
+          formatter: v => v
+        },
+        tooltip: { enabled: true }
+      },
+      scales: {
+        x: { stacked: true, grid: { display: false } },
+        y: { stacked: true, beginAtZero: true, grid: { color: "#EEE" } }
+      }
+    },
+    plugins: [{
+      id: "totalLabel",
+      afterDatasetsDraw(chart){
+        const {ctx: c} = chart;
+        c.save();
+        c.font = "bold 11px Inter, sans-serif";
+        c.fillStyle = "#14181F";
+        c.textAlign = "center";
+        chart.data.labels.forEach((_, i) => {
+          const total = totalValues[i];
+          if(total <= 0) return;
+          const meta0 = chart.getDatasetMeta(0);
+          const meta1 = chart.getDatasetMeta(1);
+          const bar0 = meta0.data[i], bar1 = meta1.data[i];
+          const topY = Math.min(bar0.y, bar1.y);
+          c.fillText(total, bar0.x, topY - 8);
+        });
+        c.restore();
+      }
+    }]
+  });
+  requestAnimationFrame(() => hubDailyChartInstance.resize());
+
+  document.getElementById("hubDailyOverlay").style.display = "flex";
+}
+
+document.getElementById("hubDailyCloseBtn").addEventListener("click", () => {
+  document.getElementById("hubDailyOverlay").style.display = "none";
+});
+document.getElementById("hubDailyOverlay").addEventListener("click", (e) => {
+  if(e.target.id === "hubDailyOverlay") document.getElementById("hubDailyOverlay").style.display = "none";
+});
+
+function openCardModal(name){
+  const c = contractors.find(x => x.name === name);
+  if(!c) return;
+  const hubItems = CONTRACTOR_HUBS[c.name] || [];
+  const target = TARGETS[c.name] || 0;
+  const missing = missingFor(c.name, c.total);
+
+  document.getElementById("modalCapture").innerHTML = `
+    <div class="modal-head">
+      <svg class="pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11z"/>
+        <circle cx="12" cy="10" r="2.5"/>
+      </svg>
+      <span class="name">${c.name}</span>
+    </div>
+    <div class="modal-body">
+      <div class="modal-left">
+        <div class="modal-headline">
+          <div class="value num">${fmt(c.total)}</div>
+          <div class="label">Total Stars</div>
+        </div>
+        <div class="modal-stats">
+          ${topStatuses.map((st,i) => `
+            <div class="mstat" style="--stat-bg:${STATUS_COLORS[i % STATUS_COLORS.length].bg}; --stat-color:${STATUS_COLORS[i % STATUS_COLORS.length].c}">
+              <div class="mval num">${fmt(c.statusCounts[st] || 0)}</div>
+              <div class="mlabel">${st}</div>
+            </div>
+          `).join("")}
+          <div class="mstat" style="--stat-bg:var(--bg); --stat-color:var(--ink-soft)">
+            <div class="mval num">${fmt(target)}</div>
+            <div class="mlabel">Target</div>
+          </div>
+          <div class="mstat" style="--stat-bg:#FEF2F2; --stat-color:#DC2626">
+            <div class="mval num">${fmt(missing)}</div>
+            <div class="mlabel">Missing</div>
+          </div>
+          <div class="mstat" style="--stat-bg:var(--info-bg); --stat-color:var(--info)">
+            <div class="mval num">${fmt(TODAY_ACQ[c.name] || 0)}</div>
+            <div class="mlabel">New Stars Today</div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-right">
+        ${hubItems.length ? `
+          <div class="modal-hubs-title">Stars distribution by hubs (${hubItems.length} hubs)</div>
+          <div class="modal-chart-wrap">
+            <canvas id="modalPieChart"></canvas>
+            <div class="modal-legend">
+              ${hubItems.map((item, i) => `
+                <div class="legend-row">
+                  <span class="legend-dot" style="background:${PIE_COLORS[i % PIE_COLORS.length]}"></span>
+                  <span class="legend-name">${item.name}</span>
+                  <span class="legend-val num">${fmt(item.count)}</span>
+                </div>
+              `).join("")}
+            </div>
+          </div>
+        ` : ``}
+      </div>
+    </div>
+  `;
+
+  if(modalChart){ modalChart.destroy(); modalChart = null; }
+  if(hubItems.length){
+    const ctx = document.getElementById("modalPieChart");
+    modalChart = new Chart(ctx, {
+      type: "pie",
+      data: {
+        labels: hubItems.map(i => i.name),
+        datasets: [{
+          data: hubItems.map(i => i.count),
+          backgroundColor: hubItems.map((_, i) => PIE_COLORS[i % PIE_COLORS.length]),
+          borderWidth: 1,
+          borderColor: "#ffffff"
+        }]
+      },
+      options: {
+        responsive: false,
+        animation: false,
+        plugins: {
+          legend: { display: false },
+          datalabels: { color: "#fff", font: { weight: "bold", size: 11 }, formatter: (value) => value },
+          tooltip: { callbacks: { label: (ctx) => `${ctx.label}: ${ctx.parsed}` } }
+        }
+      }
+    });
+  }
+
+  resetModalButtons();
+  document.getElementById("cardModalOverlay").style.display = "flex";
+}
+
+function resetModalButtons(){
+  const dlBtn = document.getElementById("modalDownloadBtn");
+  dlBtn.classList.remove("copied");
+  dlBtn.querySelector(".downloadLabel").textContent = "Download";
+}
+
+document.getElementById("modalCloseBtn").addEventListener("click", () => {
+  document.getElementById("cardModalOverlay").style.display = "none";
+});
+document.getElementById("cardModalOverlay").addEventListener("click", (e) => {
+  if(e.target.id === "cardModalOverlay") document.getElementById("cardModalOverlay").style.display = "none";
+});
+
+async function captureModalCanvas(){
+  const target = document.getElementById("modalCapture");
+  return await html2canvas(target, {
+    backgroundColor: "#ffffff",
+    scale: 2,
+    useCORS: true,
+    logging: false
+  });
+}
+
+document.getElementById("modalDownloadBtn").addEventListener("click", async () => {
+  const dlBtn = document.getElementById("modalDownloadBtn");
+  const label = dlBtn.querySelector(".downloadLabel");
+  const originalText = label.textContent;
+  label.textContent = "Preparing...";
+  try{
+    if(typeof html2canvas !== "function"){
+      throw new Error("html2canvas not loaded");
+    }
+    const canvas = await captureModalCanvas();
+    const result = await triggerDownload(canvas, "contractor-summary.png");
+    dlBtn.classList.add("copied");
+    label.textContent = (result && result.status === "delivered") ? "Sent!" : "Downloaded!";
+    setTimeout(() => { dlBtn.classList.remove("copied"); label.textContent = originalText; }, 1800);
+  }catch(err){
+    console.error("Download failed:", err);
+    if(err && err.code === "declined"){
+      label.textContent = originalText;
+    } else if(err && err.code === "unavailable"){
+      label.textContent = "Downloads unavailable here";
+      setTimeout(() => { label.textContent = originalText; }, 2200);
+    } else {
+      label.textContent = "Failed to download";
+      setTimeout(() => { label.textContent = originalText; }, 2200);
+    }
+  }
+});
+
+async function triggerDownload(canvas, filename){
+  const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
+  if(!blob) throw new Error("Failed to render image");
+  const downloads = (window.claude && typeof window.claude.use === "function")
+    ? await window.claude.use("downloads")
+    : null;
+  if(!downloads){
+    const err = new Error("Downloads not available in this view");
+    err.code = "unavailable";
+    throw err;
+  }
+  return await downloads.save({ filename: filename || "contractor-summary.png", data: blob });
+}
+</script>
+</body>
+</html>
